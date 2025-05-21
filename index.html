@@ -1,443 +1,651 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="is-dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Bare Bones PWA (Notifications)</title>
-
-    <!-- PWA & iOS Specific Meta Tags -->
-    <link rel="manifest" href="manifest.json"> <!-- MUST BE EXTERNAL -->
-    <meta name="theme-color" content="#333333">
-
-    <!-- iOS Specific -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PWA iOS">
-
-    <!-- Apple Touch Icons (use actual icon paths) -->
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon.png">
-
-    <!-- Apple Startup Images (Splash Screens) - MUST BE EXTERNAL IMAGES -->
-    <!-- <link rel="apple-touch-startup-image" href="icons/splash-iphone-se.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"> -->
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile App UI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root {
-            --bg-color: #f0f0f0;
-            --text-color: #333;
-            --primary-color: #007aff; /* Apple blue */
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #1c1c1e;
-                --text-color: #f2f2f7;
-                --primary-color: #0a84ff;
-            }
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+        body, html {
             margin: 0;
-            padding: 20px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding-top: constant(safe-area-inset-top);
-            padding-right: constant(safe-area-inset-right);
-            padding-bottom: constant(safe-area-inset-bottom);
-            padding-left: constant(safe-area-inset-left);
-            padding-top: env(safe-area-inset-top);
-            padding-right: env(safe-area-inset-right);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent scrolling of the whole page */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a; /* Default dark background */
+            color: #e0e0e0; /* Default dark text */
         }
 
-        h1, h2, h3 {
-            color: var(--primary-color);
+        .page {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            height: 100vh; /* Full viewport height */
+            animation: fadeIn 0.5s ease-in-out;
         }
 
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
+        .page.is-active {
+            display: flex;
+        }
+
+        /* Splash Screen */
+        #splash-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #1f1f1f; /* Slightly different splash background */
+            color: #fff;
+            text-align: center;
+            animation: splashFadeOut 2.5s ease-in-out forwards;
+            animation-delay: 1s; /* Show splash for 1s before starting fade */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        #splash-page .title {
+            font-size: 3rem;
+            margin-bottom: 0.5em;
+            animation: popIn 1s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+        #splash-page .subtitle {
+            font-size: 1.5rem;
+            animation: popIn 1s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+
+        /* App Bar (Top) */
+        .app-bar {
+            background-color: #2c2c2c; /* Darker app bar */
+            color: #fff;
+            padding: 0.75rem 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            animation: slideDown 0.5s ease-out;
+        }
+        .app-bar .title {
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex-grow: 1;
+            overflow-y: auto; /* Allow vertical scroll within content */
+            padding: 1rem;
+            margin-top: 60px; /* Height of app-bar */
+            margin-bottom: 60px; /* Height of nav-bar */
+            animation: slideUpContent 0.6s ease-out;
+        }
+
+        /* Card Collection */
+        .card-collection-container {
+            position: relative;
+        }
+        .card-collection {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 1rem; /* For scrollbar */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .card-collection.is-hidden-left {
+            transform: translateX(-110%); /* Move further to ensure it's off-screen */
+            opacity: 0;
+            pointer-events: none; /* Prevent interaction when hidden */
+        }
+
+        .card-collection .card {
+            flex: 0 0 auto; /* Prevent cards from shrinking */
+            width: 80vw; /* Card width */
+            max-width: 300px;
+            margin-right: 1rem;
+            scroll-snap-align: start;
+            background-color: #333; /* Dark card background */
+            color: #e0e0e0; /* Dark card text */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease-out;
+        }
+        .card-collection .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-collection .card .card-content {
+            padding: 1.25rem;
+        }
+        .card-collection .card .title, .card-collection .card .subtitle {
+            color: #e0e0e0;
+        }
+        .card-collection .card .button {
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .card-collection .card .button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Swipe to hide button */
+        .toggle-cards-button { /* Renamed for clarity */
+            margin-bottom: 0.5rem; /* Space between button and cards */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+
+        /* Nav Bar (Bottom) */
+        .nav-bar {
+            background-color: #2c2c2c; /* Darker nav bar */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem 0;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+            z-index: 100;
+            animation: slideUp 0.5s ease-out;
+        }
+        .nav-bar .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #b0b0b0; /* Inactive icon color */
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 0.5rem;
             border-radius: 8px;
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+            flex-grow: 1; /* Allow items to take up space */
+            text-align: center;
+        }
+        .nav-bar .nav-item .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .nav-bar .nav-item.is-active {
+            color: #48c774; /* Bulma success color for active */
+            transform: translateY(-3px) scale(1.05); /* Slight lift and scale for active */
+        }
+        .nav-bar .nav-item:hover {
+            background-color: #3a3a3a;
+            color: #fff;
+        }
+
+        /* Settings Page */
+        .theme-toggle-label {
+            display: flex;
+            align-items: center;
             cursor: pointer;
-            font-size: 16px;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .theme-toggle-label:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        html.is-light-mode .theme-toggle-label:hover {
+             background-color: rgba(0,0,0,0.05);
+        }
+        .theme-toggle-label .icon {
+            margin-right: 0.5rem;
+        }
+        .theme-toggle-label input[type="checkbox"] {
+            opacity: 0; /* Hide the actual checkbox */
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .theme-toggle-icon-container {
+            display: inline-flex;
+            align-items: center;
         }
 
-        button:hover {
-            opacity: 0.9;
+
+        /* Light Mode Specific Styles */
+        html.is-light-mode {
+            background-color: #f5f5f5; /* Light background */
+            color: #363636; /* Light text */
         }
-        button:disabled {
-            background-color: #888;
-            cursor: not-allowed;
+        html.is-light-mode .app-bar,
+        html.is-light-mode .nav-bar {
+            background-color: #fff;
+            color: #363636;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        html.is-light-mode .app-bar .title {
+            color: #363636;
+        }
+        html.is-light-mode .nav-bar .nav-item {
+            color: #7a7a7a; /* Inactive icon color for light mode */
+        }
+        html.is-light-mode .nav-bar .nav-item.is-active {
+            color: #23d160; /* Bulma success color for light active */
+        }
+        html.is-light-mode .nav-bar .nav-item:hover {
+            background-color: #e0e0e0;
+            color: #363636;
+        }
+        html.is-light-mode .card-collection .card {
+            background-color: #fff;
+            color: #363636;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        html.is-light-mode .card-collection .card .title,
+        html.is-light-mode .card-collection .card .subtitle {
+            color: #363636;
+        }
+        html.is-light-mode #splash-page {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        html.is-light-mode .box {
+            background-color: #ffffff;
+            color: #363636;
+        }
+        html.is-light-mode .button.is-light { /* Adjust Bulma's is-light for light theme */
+            background-color: #e6e6e6;
+            border-color: transparent;
+            color: #363636;
+        }
+        html.is-light-mode .button.is-light:hover {
+            background-color: #d9d9d9;
+            border-color: transparent;
+            color: #363636;
         }
 
-        .button-group {
-            margin-bottom: 15px;
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes splashFadeOut {
+            0% { opacity: 1; visibility: visible; }
+            99% { opacity: 0; visibility: visible; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        @keyframes slideUpContent {
+            from { opacity:0; transform: translateY(20px); }
+            to { opacity:1; transform: translateY(0); }
         }
 
-        #logContainer {
-            margin-top: 20px;
-            border: 1px solid var(--text-color);
-            padding: 10px;
-            background-color: var(--bg-color);
-            max-height: 300px;
-            overflow-y: auto;
-            border-radius: 5px;
+        /* Ensure switch looks good in both themes */
+        .switch input[type=checkbox]:checked+.check {
+            background: #48c774; /* Bulma success */
         }
-
-        #logs {
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-family: "Courier New", Courier, monospace;
-            font-size: 0.9em;
-            color: var(--text-color);
+        html.is-light-mode .switch input[type=checkbox]:checked+.check {
+            background: #23d160;
         }
     </style>
 </head>
 <body>
-    <h1>My PWA Notifications Demo</h1>
-    <p>Add to Home Screen to test all features (iOS 16.4+ for Push/Badge).</p>
 
-    <div class="button-group">
-        <h3>Basic Alert</h3>
-        <button id="showAlertBtn">Show JS Alert</button>
+    <!-- Splash Page -->
+    <div id="splash-page">
+        <h1 class="title is-1">MyApp</h1>
+        <h2 class="subtitle is-3">Your daily companion.</h2>
+        <progress class="progress is-small is-primary" max="100" style="width: 60%; margin-top: 20px;">15%</progress>
     </div>
 
-    <div class="button-group">
-        <h3>Banner/Push Notification (Local)</h3>
-        <p><small>Requires user permission. On iOS 16.4+, shows as system notification if PWA is on Home Screen.</small></p>
-        <button id="requestPushPermBtn">1. Request Push Permission</button>
-        <button id="showBannerBtn" disabled>2. Show Banner Notification</button>
+    <!-- Home Page -->
+    <div id="home-page" class="page">
+        <header class="app-bar">
+            <p class="title is-5">Home</p>
+        </header>
+        <main class="content-area">
+            <div class="card-collection-container">
+                <button id="toggle-cards-button" class="button is-small is-light toggle-cards-button">
+                    <span class="icon"><i class="fas fa-arrow-left"></i></span>
+                    <span>Hide Cards</span>
+                </button>
+                <div class="card-collection" id="home-card-collection">
+                    <div class="card">
+                        <div class="card-content">
+                            <p class="title is-4">Welcome Card</p>
+                            <p class="subtitle is-6">Swipe left to see more!</p>
+                            <p>This is a sample card. Swipe horizontally to explore other features and tips.</p>
+                            <button class="button is-primary mt-3">Get Started</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p class="title is-4">Feature Spotlight</p>
+                            <p class="subtitle is-6">Discover what's new</p>
+                            <p>Explore exciting new features and updates designed to enhance your experience.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p class="title is-4">Daily Tip</p>
+                            <p class="subtitle is-6">A little wisdom</p>
+                            <p>Small positive changes can lead to big results. Keep going!</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-content">
+                            <p class="title is-4">Community</p>
+                            <p class="subtitle is-6">Connect & Share</p>
+                            <p>Join our community to share your progress and get support from others.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="content mt-4">
+                <h3 class="title is-4">Your Dashboard</h3>
+                <p>Welcome to your personalized dashboard. Here you'll find quick access to your most important information and features.</p>
+                <div class="box">
+                    <p>More content can be placed here, like quick stats or links.</p>
+                </div>
+            </div>
+        </main>
+        <nav class="nav-bar">
+            <a href="#" class="nav-item is-active" data-page="home-page">
+                <span class="icon"><i class="fas fa-home"></i></span> Home
+            </a>
+            <a href="#" class="nav-item" data-page="motivate-page">
+                <span class="icon"><i class="fas fa-lightbulb"></i></span> Motivate
+            </a>
+            <a href="#" class="nav-item" data-page="quit-page">
+                <span class="icon"><i class="fas fa-ban"></i></span> Help Quit
+            </a>
+            <a href="#" class="nav-item" data-page="progress-page">
+                <span class="icon"><i class="fas fa-chart-line"></i></span> Progress
+            </a>
+            <a href="#" class="nav-item" data-page="settings-page">
+                <span class="icon"><i class="fas fa-cog"></i></span> Settings
+            </a>
+        </nav>
     </div>
 
-    <div class="button-group">
-        <h3>App Icon Badge</h3>
-        <p><small>On iOS 16.4+, PWA must be on Home Screen.</small></p>
-        <button id="setAppBadgeBtn">Set Badge (e.g., 5)</button>
-        <button id="clearAppBadgeBtn">Clear Badge</button>
+    <!-- Motivate Me Page -->
+    <div id="motivate-page" class="page">
+        <header class="app-bar">
+            <p class="title is-5">Motivate Me!</p>
+        </header>
+        <main class="content-area">
+            <h1 class="title">Get Inspired!</h1>
+            <div class="box">
+                <p class="is-size-5 has-text-centered">"The secret of getting ahead is getting started." - Mark Twain</p>
+            </div>
+            <div class="box">
+                <p class="is-size-5 has-text-centered">"Your limitation is only your imagination."</p>
+            </div>
+            <button class="button is-primary is-fullwidth mt-4">Get New Quote</button>
+        </main>
+        <nav class="nav-bar">
+            <a href="#" class="nav-item" data-page="home-page">
+                <span class="icon"><i class="fas fa-home"></i></span> Home
+            </a>
+            <a href="#" class="nav-item is-active" data-page="motivate-page">
+                <span class="icon"><i class="fas fa-lightbulb"></i></span> Motivate
+            </a>
+            <a href="#" class="nav-item" data-page="quit-page">
+                <span class="icon"><i class="fas fa-ban"></i></span> Help Quit
+            </a>
+            <a href="#" class="nav-item" data-page="progress-page">
+                <span class="icon"><i class="fas fa-chart-line"></i></span> Progress
+            </a>
+            <a href="#" class="nav-item" data-page="settings-page">
+                <span class="icon"><i class="fas fa-cog"></i></span> Settings
+            </a>
+        </nav>
     </div>
 
-    <hr>
+    <!-- Help Me Quit Page -->
+    <div id="quit-page" class="page">
+        <header class="app-bar">
+            <p class="title is-5">Help Me Quit!</p>
+        </header>
+        <main class="content-area">
+            <h1 class="title">Resources & Support</h1>
+            <div class="content">
+                <p>Embarking on a journey to quit a habit is a commendable step. Here are some strategies:</p>
+                <ul>
+                    <li><strong>Understand Your Triggers:</strong> Identify situations or emotions that lead to the habit.</li>
+                    <li><strong>Set a Quit Date:</strong> Choose a specific date to commit to your goal.</li>
+                    <li><strong>Develop Coping Mechanisms:</strong> Find healthy alternatives for when cravings strike (e.g., exercise, hobbies).</li>
+                    <li><strong>Build a Support System:</strong> Share your goals with friends, family, or support groups.</li>
+                    <li><strong>Track Your Progress:</strong> Celebrate milestones to stay motivated.</li>
+                </ul>
+                <button class="button is-danger is-fullwidth mt-4">Emergency Support Line</button>
+            </div>
+        </main>
+        <nav class="nav-bar">
+             <a href="#" class="nav-item" data-page="home-page">
+                <span class="icon"><i class="fas fa-home"></i></span> Home
+            </a>
+            <a href="#" class="nav-item" data-page="motivate-page">
+                <span class="icon"><i class="fas fa-lightbulb"></i></span> Motivate
+            </a>
+            <a href="#" class="nav-item is-active" data-page="quit-page">
+                <span class="icon"><i class="fas fa-ban"></i></span> Help Quit
+            </a>
+            <a href="#" class="nav-item" data-page="progress-page">
+                <span class="icon"><i class="fas fa-chart-line"></i></span> Progress
+            </a>
+            <a href="#" class="nav-item" data-page="settings-page">
+                <span class="icon"><i class="fas fa-cog"></i></span> Settings
+            </a>
+        </nav>
+    </div>
 
-    <button id="triggerErrorBtn">Trigger JS Error</button>
-    <button id="clearLogsBtn">Clear Logs</button>
+    <!-- My Progress Page -->
+    <div id="progress-page" class="page">
+        <header class="app-bar">
+            <p class="title is-5">My Progress</p>
+        </header>
+        <main class="content-area">
+            <h1 class="title">Track Your Journey</h1>
+            <div class="box">
+                <p><strong>Days Habit-Free:</strong> <span class="has-text-success is-size-4">42</span></p>
+                <p><strong>Money Saved (Est.):</strong> <span class="has-text-success is-size-4">$210.00</span></p>
+                <progress class="progress is-success mt-3" value="60" max="100">60%</progress>
+            </div>
+            <div class="box">
+                <h3 class="title is-5">Achievements Unlocked</h3>
+                <span class="tag is-medium is-success mr-2 mb-2"><span class="icon mr-1"><i class="fas fa-trophy"></i></span> 1 Week Free</span>
+                <span class="tag is-medium is-success mr-2 mb-2"><span class="icon mr-1"><i class="fas fa-trophy"></i></span> 1 Month Free</span>
+                <span class="tag is-medium is-light mr-2 mb-2"><span class="icon mr-1"><i class="fas fa-medal"></i></span> Saved $100</span>
+            </div>
+        </main>
+        <nav class="nav-bar">
+            <a href="#" class="nav-item" data-page="home-page">
+                <span class="icon"><i class="fas fa-home"></i></span> Home
+            </a>
+            <a href="#" class="nav-item" data-page="motivate-page">
+                <span class="icon"><i class="fas fa-lightbulb"></i></span> Motivate
+            </a>
+            <a href="#" class="nav-item" data-page="quit-page">
+                <span class="icon"><i class="fas fa-ban"></i></span> Help Quit
+            </a>
+            <a href="#" class="nav-item is-active" data-page="progress-page">
+                <span class="icon"><i class="fas fa-chart-line"></i></span> Progress
+            </a>
+            <a href="#" class="nav-item" data-page="settings-page">
+                <span class="icon"><i class="fas fa-cog"></i></span> Settings
+            </a>
+        </nav>
+    </div>
 
-    <h2>Logs:</h2>
-    <div id="logContainer">
-        <pre id="logs"></pre>
+    <!-- Settings Page -->
+    <div id="settings-page" class="page">
+        <header class="app-bar">
+            <p class="title is-5">Settings</p>
+        </header>
+        <main class="content-area">
+            <h1 class="title">App Settings</h1>
+            <div class="field">
+                <label class="label">Theme</label>
+                <div class="control">
+                     <label class="theme-toggle-label" for="theme-toggle-checkbox">
+                        <input type="checkbox" id="theme-toggle-checkbox">
+                        <span class="theme-toggle-icon-container">
+                            <span class="icon dark-icon"><i class="fas fa-moon"></i></span>
+                            <span class="icon light-icon" style="display:none;"><i class="fas fa-sun"></i></span>
+                        </span>
+                        <span id="theme-toggle-text" class="ml-2">Toggle Light/Dark Mode</span>
+                    </label>
+                </div>
+            </div>
+            <div class="field mt-4">
+                <label class="label">Notifications</label>
+                <div class="control">
+                    <label class="switch is-rounded is-success">
+                        <input type="checkbox" checked>
+                        <span class="check"></span>
+                        <span class="control-label ml-2">Enable Daily Reminders</span>
+                    </label>
+                </div>
+            </div>
+            <div class="field mt-5">
+                 <button class="button is-info is-fullwidth">My Account</button>
+            </div>
+             <div class="field mt-3">
+                 <button class="button is-outlined is-fullwidth">About MyApp</button>
+            </div>
+            <div class="field mt-3">
+                <button class="button is-text is-fullwidth">Privacy Policy</button>
+           </div>
+        </main>
+        <nav class="nav-bar">
+            <a href="#" class="nav-item" data-page="home-page">
+                <span class="icon"><i class="fas fa-home"></i></span> Home
+            </a>
+            <a href="#" class="nav-item" data-page="motivate-page">
+                <span class="icon"><i class="fas fa-lightbulb"></i></span> Motivate
+            </a>
+            <a href="#" class="nav-item" data-page="quit-page">
+                <span class="icon"><i class="fas fa-ban"></i></span> Help Quit
+            </a>
+            <a href="#" class="nav-item" data-page="progress-page">
+                <span class="icon"><i class="fas fa-chart-line"></i></span> Progress
+            </a>
+            <a href="#" class="nav-item is-active" data-page="settings-page">
+                <span class="icon"><i class="fas fa-cog"></i></span> Settings
+            </a>
+        </nav>
     </div>
 
     <script>
-        // --- Start of Inlined JavaScript ---
-        const logsElement = document.getElementById('logs');
-        const requestPermissionBtn = document.getElementById('requestPermissionBtn'); // Old camera perm btn
-        const triggerErrorBtn = document.getElementById('triggerErrorBtn');
-        const clearLogsBtn = document.getElementById('clearLogsBtn');
-
-        // New Notification Buttons
-        const showAlertBtn = document.getElementById('showAlertBtn');
-        const requestPushPermBtn = document.getElementById('requestPushPermBtn');
-        const showBannerBtn = document.getElementById('showBannerBtn');
-        const setAppBadgeBtn = document.getElementById('setAppBadgeBtn');
-        const clearAppBadgeBtn = document.getElementById('clearAppBadgeBtn');
-
-        let appLogs = [];
-
-        // --- Logging System ---
-        function logEvent(message, type = 'INFO') {
-            const timestamp = new Date().toISOString();
-            const logEntry = `[${timestamp}] [${type}] ${message}`;
-            console.log(logEntry);
-
-            appLogs.push(logEntry);
-            if (appLogs.length > 200) {
-                appLogs.shift();
-            }
-            renderLogs();
-            saveLogs();
-        }
-
-        function renderLogs() {
-            if (logsElement) {
-                logsElement.textContent = appLogs.join('\n');
-                if (logsElement.parentElement) {
-                  logsElement.parentElement.scrollTop = logsElement.parentElement.scrollHeight;
-                }
-            }
-        }
-
-        function saveLogs() {
-            try {
-                localStorage.setItem('appLogs', JSON.stringify(appLogs));
-            } catch (e) {
-                console.warn('Could not save logs to localStorage:', e);
-            }
-        }
-
-        function loadLogs() {
-            try {
-                const storedLogs = localStorage.getItem('appLogs');
-                if (storedLogs) {
-                    appLogs = JSON.parse(storedLogs);
-                }
-            } catch (e) {
-                console.warn('Could not load logs from localStorage:', e);
-                appLogs = [];
-            }
-        }
-
-        // --- Global Error Handling ---
-        window.onerror = function(message, source, lineno, colno, error) {
-            logEvent(`Unhandled Error: ${message} at ${source}:${lineno}:${colno}`, 'ERROR');
-            if (error && error.stack) {
-                logEvent(`Stack: ${error.stack}`, 'ERROR_STACK');
-            }
-            return false;
-        };
-
-        window.addEventListener('unhandledrejection', function(event) {
-            logEvent(`Unhandled Promise Rejection: ${event.reason}`, 'ERROR');
-            if (event.reason && event.reason.stack) {
-                logEvent(`Stack: ${event.reason.stack}`, 'ERROR_STACK');
-            }
-        });
-
-        // --- Service Worker Registration ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        logEvent('ServiceWorker registration successful', 'SW');
-                        // For true push, you'd use registration.pushManager here
-                    })
-                    .catch(error => {
-                        logEvent('ServiceWorker registration failed: ' + error, 'SW_ERROR');
-                    });
-            });
-        } else {
-            logEvent('ServiceWorker not supported.', 'APP_WARNING');
-        }
-
-        // --- Notification Features ---
-
-        // 1. JS Alert
-        if (showAlertBtn) {
-            showAlertBtn.addEventListener('click', () => {
-                logEvent('Showing JS alert.', 'NOTIFICATION');
-                alert("This is a standard JavaScript alert!");
-                logEvent('JS alert dismissed.', 'NOTIFICATION');
-            });
-        }
-
-        // 2. Banner / Push Notification (Local)
-        function checkNotificationPermission(doLog = true) {
-            if (!('Notification' in window)) {
-                if (doLog) logEvent('Notification API not supported.', 'NOTIF_ERROR');
-                showBannerBtn.disabled = true;
-                requestPushPermBtn.disabled = true;
-                return false;
-            }
-            if (Notification.permission === 'granted') {
-                if (doLog) logEvent('Notification permission already granted.', 'NOTIF_PERM');
-                showBannerBtn.disabled = false;
-                requestPushPermBtn.textContent = 'Permission Granted';
-                requestPushPermBtn.disabled = true;
-            } else if (Notification.permission === 'denied') {
-                if (doLog) logEvent('Notification permission denied.', 'NOTIF_PERM');
-                showBannerBtn.disabled = true;
-                requestPushPermBtn.textContent = 'Permission Denied';
-                requestPushPermBtn.disabled = true;
-            } else {
-                 if (doLog) logEvent('Notification permission default (not yet requested or dismissed).', 'NOTIF_PERM');
-                showBannerBtn.disabled = true; // Enable only after permission
-                requestPushPermBtn.disabled = false;
-            }
-            return true;
-        }
-
-        if (requestPushPermBtn) {
-            requestPushPermBtn.addEventListener('click', () => {
-                if (!('Notification' in window)) {
-                    logEvent('Notification API not supported.', 'NOTIF_ERROR');
-                    alert('Sorry, Notifications are not supported in your browser.');
-                    return;
-                }
-                logEvent('Requesting notification permission...', 'NOTIF_PERM');
-                Notification.requestPermission().then(permission => {
-                    logEvent(`Notification permission status: ${permission}`, 'NOTIF_PERM');
-                    checkNotificationPermission(false); // Update button states without re-logging initial status
-                    if (permission === 'granted') {
-                        logEvent('You can now show banner notifications.', 'NOTIF_PERM');
-                    } else {
-                        logEvent('Banner notifications cannot be shown without permission.', 'NOTIF_PERM');
-                    }
-                });
-            });
-        }
-
-        if (showBannerBtn) {
-            showBannerBtn.addEventListener('click', () => {
-                if (!('Notification' in window) || Notification.permission !== 'granted') {
-                    logEvent('Cannot show banner: No permission or API not supported.', 'NOTIF_ERROR');
-                    alert('Please grant notification permission first.');
-                    return;
-                }
-                logEvent('Showing banner notification...', 'NOTIFICATION');
-                const notifTitle = "PWA Test Notification";
-                const notifBody = `Hello from your PWA! Time: ${new Date().toLocaleTimeString()}`;
-                const notifIcon = 'icons/icon-192x192.png'; // Should be accessible URL
-                const options = {
-                    body: notifBody,
-                    icon: notifIcon,
-                    badge: 'icons/apple-touch-icon.png', // Badge for notification itself (Android mostly)
-                    // Vibrate is not consistently supported on iOS for web notifications
-                    // vibrate: [200, 100, 200],
-                    tag: 'pwa-test-notification', // Replaces existing notification with same tag
-                    renotify: true, // Notifies even if a notification with the same tag exists
-                };
-                try {
-                    // Check if service worker is ready, for more robust notifications
-                    // but for local client-side, this is fine.
-                    // navigator.serviceWorker.ready.then(registration => {
-                    //     registration.showNotification(notifTitle, options);
-                    // });
-                    // Direct notification from page:
-                    const notification = new Notification(notifTitle, options);
-                    notification.onclick = () => {
-                        logEvent('Banner notification clicked.', 'NOTIFICATION_EVENT');
-                        window.focus(); // Try to bring PWA to foreground
-                        // You could also navigate:
-                        // clients.openWindow('/some-specific-page'); (from SW)
-                        // window.location.href = '/'; (from page)
-                    };
-                    notification.onclose = () => {
-                        logEvent('Banner notification closed.', 'NOTIFICATION_EVENT');
-                    };
-                    notification.onerror = (err) => {
-                        logEvent(`Banner notification error: ${err}`, 'NOTIF_ERROR');
-                    };
-
-                } catch (err) {
-                    logEvent(`Error creating notification: ${err}`, 'NOTIF_ERROR');
-                }
-            });
-        }
-
-        // 3. App Icon Badge
-        function checkBadgeSupport() {
-            if (!('setAppBadge' in navigator && 'clearAppBadge' in navigator)) {
-                logEvent('App Badging API not supported.', 'BADGE_ERROR');
-                if(setAppBadgeBtn) setAppBadgeBtn.disabled = true;
-                if(clearAppBadgeBtn) clearAppBadgeBtn.disabled = true;
-                return false;
-            }
-            logEvent('App Badging API is supported.', 'BADGE_INFO');
-            if(setAppBadgeBtn) setAppBadgeBtn.disabled = false;
-            if(clearAppBadgeBtn) clearAppBadgeBtn.disabled = false;
-            return true;
-        }
-
-        if (setAppBadgeBtn) {
-            setAppBadgeBtn.addEventListener('click', async () => {
-                if (!('setAppBadge' in navigator)) {
-                    logEvent('setAppBadge not supported.', 'BADGE_ERROR');
-                    alert('App badging is not supported in your browser/PWA mode.');
-                    return;
-                }
-                const badgeCount = parseInt(prompt("Enter badge number (e.g., 5):", "5"));
-                if (!isNaN(badgeCount) && badgeCount > 0) {
-                    try {
-                        await navigator.setAppBadge(badgeCount);
-                        logEvent(`App badge set to ${badgeCount}.`, 'BADGE_ACTION');
-                    } catch (error) {
-                        logEvent(`Error setting app badge: ${error}`, 'BADGE_ERROR');
-                    }
-                } else if (badgeCount === 0) {
-                     try {
-                        await navigator.clearAppBadge();
-                        logEvent('App badge cleared (by setting to 0).', 'BADGE_ACTION');
-                    } catch (error) {
-                        logEvent(`Error clearing app badge: ${error}`, 'BADGE_ERROR');
-                    }
-                } else {
-                    logEvent('Invalid badge number entered.', 'BADGE_INPUT_ERROR');
-                }
-            });
-        }
-
-        if (clearAppBadgeBtn) {
-            clearAppBadgeBtn.addEventListener('click', async () => {
-                if (!('clearAppBadge' in navigator)) {
-                    logEvent('clearAppBadge not supported.', 'BADGE_ERROR');
-                    alert('App badging is not supported in your browser/PWA mode.');
-                    return;
-                }
-                try {
-                    await navigator.clearAppBadge();
-                    logEvent('App badge cleared.', 'BADGE_ACTION');
-                } catch (error) {
-                    logEvent(`Error clearing app badge: ${error}`, 'BADGE_ERROR');
-                }
-            });
-        }
-
-
-        // --- Trigger Error Example ---
-        if (triggerErrorBtn) {
-            triggerErrorBtn.addEventListener('click', () => {
-                logEvent('Triggering a test error.', 'TEST');
-                try {
-                    const a = undefined;
-                    console.log(a.b.c);
-                } catch (e) {
-                    logEvent(`Caught test error locally: ${e.message}`, 'ERROR');
-                }
-            });
-        }
-
-        // --- Clear Logs ---
-        if (clearLogsBtn) {
-            clearLogsBtn.addEventListener('click', () => {
-                appLogs = [];
-                renderLogs();
-                saveLogs();
-                logEvent('Logs cleared.', 'SYSTEM');
-            });
-        }
-
-        // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadLogs();
-            renderLogs();
-            logEvent('App Initialized. iOS 16.4+ & Home Screen for Push/Badge.', 'APP_LIFECYCLE');
+            const pages = document.querySelectorAll('.page');
+            const navItems = document.querySelectorAll('.nav-bar .nav-item'); // Selects all nav items from all nav bars
+            const splashPage = document.getElementById('splash-page');
+            const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
+            const themeToggleText = document.getElementById('theme-toggle-text');
+            const darkIcon = document.querySelector('.theme-toggle-icon-container .dark-icon');
+            const lightIcon = document.querySelector('.theme-toggle-icon-container .light-icon');
 
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-                logEvent('App is running in standalone (PWA) mode.', 'PWA_MODE');
-            } else {
-                logEvent('App is running in browser tab. Some features like badging or full push appearance might be limited.', 'BROWSER_MODE');
-            }
+            const toggleCardsButton = document.getElementById('toggle-cards-button');
+            const cardCollection = document.getElementById('home-card-collection');
 
-            if (window.matchMedia) {
-                const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-                logEvent(`Initial color scheme: ${darkModeMediaQuery.matches ? 'dark' : 'light'}`, 'SYSTEM');
-                darkModeMediaQuery.addEventListener('change', (e) => {
-                    const newColorScheme = e.matches ? "dark" : "light";
-                    logEvent(`Color scheme changed to: ${newColorScheme}`, 'SYSTEM');
+            function showPage(pageId) {
+                pages.forEach(page => page.classList.remove('is-active'));
+                const activePage = document.getElementById(pageId);
+                if (activePage) activePage.classList.add('is-active');
+
+                // Update active state for all nav items across all nav bars
+                document.querySelectorAll('.nav-bar .nav-item').forEach(item => {
+                    if (item.dataset.page === pageId) {
+                        item.classList.add('is-active');
+                    } else {
+                        item.classList.remove('is-active');
+                    }
                 });
             }
 
-            // Initial checks for feature support
-            checkNotificationPermission();
-            checkBadgeSupport();
+            setTimeout(() => {
+                // Splash fade out animation handles visibility
+                showPage('home-page');
+            }, 3500); // Duration of splash screen (animation + delay)
+
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const pageId = item.dataset.page;
+                    showPage(pageId);
+                });
+            });
+            
+            function updateThemeToggleDisplay(isLightMode) {
+                if (themeToggleCheckbox) themeToggleCheckbox.checked = isLightMode;
+                if (themeToggleText) themeToggleText.textContent = isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+                if (darkIcon) darkIcon.style.display = isLightMode ? 'none' : 'inline-flex';
+                if (lightIcon) lightIcon.style.display = isLightMode ? 'inline-flex' : 'none';
+            }
+
+            function applyTheme(isLight) {
+                if (isLight) {
+                    document.documentElement.classList.add('is-light-mode');
+                    document.documentElement.classList.remove('is-dark');
+                } else {
+                    document.documentElement.classList.remove('is-light-mode');
+                    document.documentElement.classList.add('is-dark');
+                }
+                updateThemeToggleDisplay(isLight);
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            }
+
+            const savedTheme = localStorage.getItem('theme');
+            // Default to dark if no theme saved or if saved theme is 'dark'
+            let currentThemeIsLight = savedTheme === 'light';
+            applyTheme(currentThemeIsLight);
+
+
+            if (themeToggleCheckbox) {
+                themeToggleCheckbox.addEventListener('change', () => {
+                    currentThemeIsLight = themeToggleCheckbox.checked;
+                    applyTheme(currentThemeIsLight);
+                });
+            }
+
+            if (toggleCardsButton && cardCollection) {
+                let cardsHidden = false;
+                toggleCardsButton.addEventListener('click', () => {
+                    cardsHidden = !cardsHidden;
+                    cardCollection.classList.toggle('is-hidden-left', cardsHidden);
+                    if (cardsHidden) {
+                        toggleCardsButton.innerHTML = '<span class="icon"><i class="fas fa-arrow-right"></i></span> <span>Show Cards</span>';
+                    } else {
+                        toggleCardsButton.innerHTML = '<span class="icon"><i class="fas fa-arrow-left"></i></span> <span>Hide Cards</span>';
+                    }
+                });
+            }
+
+            // Ensure initial state of nav items is correct based on the initially displayed page
+            // (This is mostly for the case where the splash screen is very short or disabled for testing)
+            if (document.querySelector('.page.is-active')) {
+                 showPage(document.querySelector('.page.is-active').id);
+            } else if (pages.length > 0) {
+                 // If somehow no page is active, default to the first one (after splash)
+                 // This is handled by the splash timeout, but as a fallback:
+                 // showPage(pages[0].id === 'splash-page' && pages.length > 1 ? pages[1].id : pages[0].id);
+            }
+
         });
-        // --- End of Inlined JavaScript ---
     </script>
 </body>
 </html>
