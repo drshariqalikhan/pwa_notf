@@ -1,9 +1,32 @@
+
 <!DOCTYPE html>
 <html lang="en" class="is-dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>10 Week Transformation</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Theme Color for Browser UI -->
+    <meta name="theme-color" content="#48c774"> <!-- Match this with your primary color -->
+
+    <!-- iOS PWA Specific Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- or default, black -->
+    <meta name="apple-mobile-web-app-title" content="10Wk Up">
+    <link rel="apple-touch-icon" href="icons/apple-icon-180.png"> <!-- 180x180 -->
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-icon-152.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-icon-167.png"> <!-- For iPad Pro -->
+    <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-icon-120.png"> <!-- For iPhone Retina -->
+    <!-- Add more sizes if needed -->
+
+    <!-- Favicon (optional but good practice) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -26,6 +49,7 @@
             height: 100%;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
         }
 
         html.is-dark {
@@ -40,14 +64,16 @@
         .page {
             display: none;
             flex-direction: column;
-            height: 100vh;
+            height: 100vh; /* Full viewport height */
             animation: fadeIn 0.5s ease-in-out;
         }
         .page.is-active { display: flex; }
 
         /* Splash Screen */
         #splash-page {
+            display: flex; /* Ensure it's flex for initial display */
             justify-content: center; align-items: center; flex-direction: column;
+            height: 100vh;
             background-color: var(--dark-surface); color: #fff; text-align: center;
             animation: splashFadeOut 2.5s ease-in-out forwards; animation-delay: 1s;
             position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
@@ -60,19 +86,24 @@
         .app-bar {
             padding: 0.75rem 1rem; position: fixed; top: 0; left: 0; width: 100%;
             z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.3); animation: slideDown 0.5s ease-out;
+            display: flex; /* For aligning title and button */
+            align-items: center; /* Vertically align items */
         }
         html.is-dark .app-bar { background-color: var(--dark-surface); color: #fff; }
         html.is-light-mode .app-bar { background-color: var(--light-surface); color: var(--light-text); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .app-bar .title { font-size: 1.5rem; }
+        .app-bar .title { font-size: 1.25rem; /* Slightly smaller for mobile */ margin-right: auto; /* Pushes button to the right */}
         html.is-dark .app-bar .title { color: #fff; }
         html.is-light-mode .app-bar .title { color: var(--light-text); }
-        .app-bar .button.is-primary { margin-left: auto; }
+        .app-bar .button.is-primary { margin-left: auto; font-size: 0.8rem; padding: 0.5em 0.75em; }
 
 
         /* Content Area */
         .content-area {
             flex-grow: 1; overflow-y: auto; padding: 1rem;
-            margin-top: 60px; margin-bottom: 60px; animation: slideUpContent 0.6s ease-out;
+            margin-top: 56px; /* Adjusted for potentially smaller app-bar */
+            margin-bottom: 56px; /* Adjusted for potentially smaller nav-bar */
+            animation: slideUpContent 0.6s ease-out;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
 
         /* Card Collection */
@@ -88,9 +119,9 @@
         html.is-light-mode .card-collection .card { background-color: var(--light-card); color: var(--light-text); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
         .card-collection .card:hover:not(.is-task-done) { transform: translateY(-5px); }
-        .card-collection .card .card-content { padding: 1rem; } /* Adjusted padding */
-        .card-collection .card .title { font-size: 1.2rem; margin-bottom: 0.5rem;} /* Adjusted title */
-        .card-collection .card .subtitle { font-size: 0.9rem; margin-bottom: 0.75rem;} /* Adjusted subtitle */
+        .card-collection .card .card-content { padding: 1rem; }
+        .card-collection .card .title { font-size: 1.1rem; margin-bottom: 0.5rem;}
+        .card-collection .card .subtitle { font-size: 0.85rem; margin-bottom: 0.75rem;}
         html.is-dark .card-collection .card .title, html.is-dark .card-collection .card .subtitle { color: var(--dark-text); }
         html.is-light-mode .card-collection .card .title, html.is-light-mode .card-collection .card .subtitle { color: var(--light-text); }
         
@@ -104,12 +135,24 @@
         .card.is-task-done { opacity: 0.85; }
         html.is-dark .card.is-task-done { background-color: #2a523d; border-left: 5px solid var(--primary-color); }
         html.is-light-mode .card.is-task-done { background-color: var(--primary-color-light); border-left: 5px solid var(--primary-color); }
-        /* ... other .is-task-done styles ... */
+        .card.is-task-done .title,
+        .card.is-task-done .subtitle,
+        .card.is-task-done p:not(.task-done-checkbox-label span) { /* Avoid changing checkbox label color */
+            color: #c0c0c0;
+        }
+        html.is-light-mode .card.is-task-done .title,
+        html.is-light-mode .card.is-task-done .subtitle,
+        html.is-light-mode .card.is-task-done p:not(.task-done-checkbox-label span) {
+            color: #555;
+        }
+        .card.is-task-done .task-done-checkbox-label { color: var(--dark-text) !important; } /* Ensure checkbox text is visible */
+        html.is-light-mode .card.is-task-done .task-done-checkbox-label { color: var(--light-text) !important; }
+
 
         .task-done-checkbox-container { margin-top: 1rem; padding-top: 0.75rem; }
         html.is-dark .task-done-checkbox-container { border-top: 1px solid #444; }
         html.is-light-mode .task-done-checkbox-container { border-top: 1px solid #ddd; }
-        .task-done-checkbox-label { display: flex; align-items: center; }
+        .task-done-checkbox-label { display: flex; align-items: center; font-size: 0.9rem; }
         .task-done-checkbox-label .icon { margin-right: 0.5em; }
         html.is-dark .task-done-checkbox-label { color: var(--dark-text); }
         html.is-light-mode .task-done-checkbox-label { color: var(--light-text); }
@@ -123,37 +166,48 @@
 
         /* Nav Bar (Bottom) */
         .nav-bar {
+            height: 56px; /* Fixed height */
             position: fixed; bottom: 0; left: 0; width: 100%; display: flex; justify-content: space-around;
-            padding: 0.5rem 0; box-shadow: 0 -2px 5px rgba(0,0,0,0.3); z-index: 100; animation: slideUp 0.5s ease-out;
+            padding: 0.3rem 0; box-shadow: 0 -2px 5px rgba(0,0,0,0.3); z-index: 100; animation: slideUp 0.5s ease-out;
         }
         html.is-dark .nav-bar { background-color: var(--dark-surface); }
         html.is-light-mode .nav-bar { background-color: var(--light-surface); box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
         .nav-bar .nav-item {
-            display: flex; flex-direction: column; align-items: center; text-decoration: none;
-            font-size: 0.7rem; padding: 0.4rem; border-radius: 8px; flex-grow: 1; text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; /* Center content in fixed height */
+            text-decoration: none;
+            font-size: 0.65rem; /* Smaller font for more text or smaller icons */
+            padding: 0.2rem; /* Reduced padding */
+            border-radius: 8px; flex-grow: 1; text-align: center;
             transition: background-color 0.3s, color 0.3s, transform 0.2s;
+            height: 100%; /* Take full height of nav-bar */
         }
         html.is-dark .nav-bar .nav-item { color: #b0b0b0; }
         html.is-light-mode .nav-bar .nav-item { color: #7a7a7a; }
-        .nav-bar .nav-item .icon { font-size: 1.3rem; margin-bottom: 0.15rem; } /* Adjusted icon size */
-        .nav-bar .nav-item.is-active { color: var(--primary-color); transform: translateY(-3px) scale(1.05); }
+        .nav-bar .nav-item .icon { font-size: 1.2rem; margin-bottom: 0.1rem; }
+        .nav-bar .nav-item.is-active { color: var(--primary-color); transform: translateY(-2px) scale(1.03); }
         html.is-dark .nav-bar .nav-item:hover { background-color: #3a3a3a; color: #fff; }
         html.is-light-mode .nav-bar .nav-item:hover { background-color: #e0e0e0; color: var(--light-text); }
 
 
         /* Settings Page */
         .theme-toggle-label { display: flex; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background-color 0.2s; }
-        /* ... other theme toggle styles ... */
+        html.is-dark .theme-toggle-label:hover { background-color: rgba(255,255,255,0.1); }
+        html.is-light-mode .theme-toggle-label:hover { background-color: rgba(0,0,0,0.05); }
+        .theme-toggle-label input[type="checkbox"] { opacity: 0; width: 0; height: 0; position: absolute; }
+        .theme-toggle-icon-container { display: inline-flex; align-items: center; }
         
         /* Modal Styles */
-        .modal .modal-card-body { max-height: 70vh; } /* For LLM chat scroll */
-        .llm-chat-history { max-height: 200px; overflow-y: auto; border: 1px solid #555; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .modal .modal-card-body { max-height: 70vh; }
+        .llm-chat-history { max-height: 200px; overflow-y: auto; border: 1px solid #555; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 0.9rem;}
         html.is-light-mode .llm-chat-history { border-color: #ccc; }
         .llm-chat-history p { margin-bottom: 5px; }
-        .llm-chat-history .user-message { text-align: right; color: #a1d9ff; }
-        .llm-chat-history .bot-message { text-align: left; color: #e0e0e0; }
+        .llm-chat-history .user-message { text-align: right; }
+        html.is-dark .llm-chat-history .user-message { color: #a1d9ff; }
         html.is-light-mode .llm-chat-history .user-message { color: #007bff; }
-        html.is-light-mode .llm-chat-history .bot-message { color: #555; }
+        .llm-chat-history .bot-message { text-align: left; }
+        html.is-dark .llm-chat-history .bot-message { color: var(--dark-text); }
+        html.is-light-mode .llm-chat-history .bot-message { color: var(--light-text); }
+
 
         /* Gamification */
         .user-stats { margin-bottom: 1rem; }
@@ -172,8 +226,41 @@
         @keyframes slideUpContent { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
         
         /* Utility */
-        .is-fullheight-with-fixed { min-height: calc(100vh - 120px); /* appbar + navbar height */ }
-        .form-page-container { max-width: 500px; margin: 0 auto; }
+        .is-fullheight-with-fixed { min-height: calc(100vh - 112px); /* appbar + navbar height */ display: flex; flex-direction: column; justify-content: center; }
+        .form-page-container { width: 100%; max-width: 500px; margin: 0 auto; padding: 1rem; }
+        .are-vertical .button:not(:last-child) { margin-bottom: 0.75rem !important; } /* Ensure Bulma vertical buttons have space */
+
+        /* Ensure Bulma checkbox/radio and switch are visible in dark mode */
+        html.is-dark .checkbox input[type="checkbox"] + span::before,
+        html.is-dark .radio input[type="radio"] + span::before {
+            border-color: #777;
+        }
+        html.is-dark .checkbox input[type="checkbox"]:checked + span::before,
+        html.is-dark .radio input[type="radio"]:checked + span::before {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        html.is-dark .switch input[type=checkbox]+.check {
+            background: #555;
+        }
+        html.is-dark .switch input[type=checkbox]:checked+.check {
+            background: var(--primary-color);
+        }
+        html.is-dark .label { color: #ccc; }
+        html.is-dark .input, html.is-dark .textarea, html.is-dark .select select {
+            background-color: #444;
+            border-color: #555;
+            color: var(--dark-text);
+        }
+        html.is-dark .input::placeholder, html.is-dark .textarea::placeholder {
+            color: #888;
+        }
+        html.is-dark .box { background-color: var(--dark-card); }
+        html.is-dark .notification.is-info.is-light { background-color: rgba(72, 199, 116, 0.1); color: #b8ebd0; }
+        html.is-dark .notification.is-warning.is-light { background-color: rgba(255, 221, 87, 0.1); color: #ffe99a; }
+        html.is-light-mode .notification.is-info.is-light { background-color: #eefaf3; color: #216e45; }
+        html.is-light-mode .notification.is-warning.is-light { background-color: #fffbeb; color: #947600; }
+
     </style>
 </head>
 <body>
@@ -187,21 +274,21 @@
     <!-- Registration Page -->
     <div id="registration-page" class="page">
         <header class="app-bar"><p class="title is-5">Welcome!</p></header>
-        <main class="content-area is-fullheight-with-fixed has-text-centered">
+        <main class="content-area is-fullheight-with-fixed">
             <div class="form-page-container">
-                <h1 class="title is-3">Let's Get Started</h1>
-                <p class="subtitle is-5">Tell us a bit about yourself.</p>
+                <h1 class="title is-3 has-text-centered">Let's Get Started</h1>
+                <p class="subtitle is-5 has-text-centered">Tell us a bit about yourself.</p>
                 <form id="registration-form">
                     <div class="field">
-                        <label class="label has-text-left">Name</label>
+                        <label class="label">Name</label>
                         <div class="control"><input class="input" type="text" id="reg-name" placeholder="Your Name" required></div>
                     </div>
                     <div class="field">
-                        <label class="label has-text-left">Age</label>
+                        <label class="label">Age</label>
                         <div class="control"><input class="input" type="number" id="reg-age" placeholder="e.g., 30" required min="16" max="99"></div>
                     </div>
                     <div class="field">
-                        <label class="label has-text-left">Gender</label>
+                        <label class="label">Gender</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                                 <select id="reg-gender" required>
@@ -214,11 +301,11 @@
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label has-text-left">Weight (kg)</label>
+                        <label class="label">Weight (kg)</label>
                         <div class="control"><input class="input" type="number" id="reg-weight" placeholder="e.g., 70" step="0.1" required></div>
                     </div>
                     <div class="field">
-                        <label class="label has-text-left">Height (cm)</label>
+                        <label class="label">Height (cm)</label>
                         <div class="control"><input class="input" type="number" id="reg-height" placeholder="e.g., 175" required></div>
                     </div>
                     <button type="submit" class="button is-primary is-fullwidth mt-5">Next: Baseline</button>
@@ -232,15 +319,15 @@
         <header class="app-bar"><p class="title is-5">Baseline Assessment</p></header>
         <main class="content-area is-fullheight-with-fixed">
              <div class="form-page-container">
-                <h1 class="title is-3">Your Starting Point</h1>
-                <p class="subtitle is-5">Record your initial performance.</p>
+                <h1 class="title is-3 has-text-centered">Your Starting Point</h1>
+                <p class="subtitle is-5 has-text-centered">Record your initial performance.</p>
                 <form id="baseline-form">
                     <div class="field">
-                        <label class="label has-text-left">Cardio Capacity (e.g., Mins of continuous jogging, or reps in 1 min jump test)</label>
+                        <label class="label">Cardio Capacity (e.g., Mins of continuous jogging, or reps in 1 min jump test)</label>
                         <div class="control"><input class="input" type="number" id="baseline-cardio" placeholder="e.g., 5 (mins) or 30 (reps)" required></div>
                     </div>
                     <div class="field">
-                        <label class="label has-text-left">Strength Reps (e.g., Max push-ups or squats)</label>
+                        <label class="label">Strength Reps (e.g., Max push-ups or squats)</label>
                         <div class="control"><input class="input" type="number" id="baseline-strength" placeholder="e.g., 10" required></div>
                     </div>
                     <button type="submit" class="button is-primary is-fullwidth mt-5">Next: Choose Track</button>
@@ -254,11 +341,11 @@
         <header class="app-bar"><p class="title is-5">Choose Your Path</p></header>
         <main class="content-area is-fullheight-with-fixed">
             <div class="form-page-container">
-                <h1 class="title is-3">Select Exercise Track</h1>
-                <p class="subtitle is-5">Pick a track that suits your current fitness level.</p>
-                <div class="buttons are-medium is-centered are-vertical">
-                    <button class="button is-info is-fullwidth mb-3" data-track="beginner">Beginner Track</button>
-                    <button class="button is-warning is-fullwidth mb-3" data-track="intermediate">Intermediate Track</button>
+                <h1 class="title is-3 has-text-centered">Select Exercise Track</h1>
+                <p class="subtitle is-5 has-text-centered">Pick a track that suits your current fitness level.</p>
+                <div class="buttons are-medium is-centered are-vertical"> <!-- Added are-vertical -->
+                    <button class="button is-info is-fullwidth" data-track="beginner">Beginner Track</button>
+                    <button class="button is-warning is-fullwidth" data-track="intermediate">Intermediate Track</button>
                     <button class="button is-danger is-fullwidth" data-track="advanced">Advanced Track</button>
                 </div>
                 <p class="is-size-7 mt-4 has-text-centered">Tracks will escalate weekly based on your baseline, age, and gender.</p>
@@ -270,7 +357,7 @@
     <div id="home-page" class="page">
         <header class="app-bar">
             <p class="title is-5" id="home-page-title">Daily Tasks</p>
-            <button id="motivate-me-now-button" class="button is-primary is-small">Motivate Me!</button>
+            <button id="motivate-me-now-button" class="button is-primary">Motivate!</button>
         </header>
         <main class="content-area">
             <div class="user-stats columns is-mobile is-multiline has-text-centered">
@@ -288,24 +375,23 @@
                 <progress class="progress is-primary" id="challenge-progress-bar" value="0" max="70"></progress>
             </div>
             <div id="welcome-back-message" class="notification is-info is-light" style="display:none;"></div>
-            <div id="daily-task-reminder" class="notification is-warning is-light" style="display:none;">
-                Don't forget your daily tasks! <button id="request-notification-permission" class="button is-small">Enable Reminders</button>
+            <div id="daily-task-reminder" class="notification is-warning is-light mb-3" style="display:none;">
+                Don't forget your daily tasks! <button id="request-notification-permission" class="button is-small is-warning">Enable Reminders</button>
             </div>
             <div class="card-collection-container">
                 <div class="card-collection" id="home-card-collection">
-                    <!-- Dynamic cards will be injected here by JS -->
                     <div class="card"><div class="card-content"><p class="has-text-centered p-5">Loading tasks...</p></div></div>
                 </div>
             </div>
              <div class="content mt-4">
-                <h3 class="title is-4">Your Dashboard</h3>
-                <div id="user-info-dashboard" class="box">
-                    <!-- User info like name, ideal weight etc. -->
+                <h3 class="title is-4">Your Dashboard Info</h3>
+                <div id="user-info-dashboard" class="box content is-small">
+                    <!-- User info -->
                 </div>
                 <div id="gamification-badges" class="box">
                     <h4 class="title is-5">My Badges</h4>
                     <div id="badges-display" class="tags">
-                        <!-- Badges will be shown here -->
+                        <!-- Badges -->
                     </div>
                 </div>
             </div>
@@ -328,10 +414,13 @@
                 <h4>Why is motivation important?</h4>
                 <p>Motivation is the driving force behind achieving your goals. It's what gets you started and keeps you going, especially when things get tough. Understanding your "why" can be a powerful motivator.</p>
                 <h4>How habit formation works:</h4>
-                <p>Habits are formed through repetition (cue, routine, reward). Small, consistent actions build momentum. Don't aim for perfection, aim for consistency.</p>
+                <p>Habits are formed through repetition (cue, routine, reward). Small, consistent actions build momentum. Don't aim for perfection, aim for consistency. Each completed task, no matter how small, reinforces the new habit.</p>
             </div>
              <div class="box">
                 <p class="is-size-5 has-text-centered">"The journey of a thousand miles begins with a single step." - Lao Tzu</p>
+            </div>
+             <div class="box">
+                <p class="is-size-5 has-text-centered">"Success is not final, failure is not fatal: It is the courage to continue that counts." - Winston Churchill</p>
             </div>
         </main>
         <nav class="nav-bar">
@@ -347,9 +436,8 @@
     <div id="quit-page" class="page">
         <header class="app-bar"><p class="title is-5">Change a Habit</p></header>
         <main class="content-area">
-            <h1 class="title">Your Unhealthy Habit Focus</h1>
+            <h1 class="title">Your Habit Focus</h1>
             <div id="quit-habit-content" class="box">
-                <!-- Content changes based on week -->
                 <p>Loading habit challenge...</p>
             </div>
         </main>
@@ -362,26 +450,29 @@
         </nav>
     </div>
     
-    <!-- My Progress Page (Placeholder) -->
+    <!-- My Progress Page -->
     <div id="progress-page" class="page">
         <header class="app-bar"><p class="title is-5">My Progress</p></header>
         <main class="content-area">
             <h1 class="title">Your Transformation Journey</h1>
             <div class="box">
-                <h3 class="title is-5">Weight Trend (Conceptual)</h3>
-                <p>Initial Weight: <span id="prog-initial-weight">N/A</span> kg</p>
-                <p>Current Weight (Logged): <span id="prog-current-weight">N/A</span> kg</p>
-                <p>Target Ideal Weight: <span id="prog-target-weight">N/A</span> kg</p>
+                <h3 class="title is-5">Weight Trend</h3>
+                <p>Initial Weight: <span id="prog-initial-weight" class="has-text-weight-bold">N/A</span> kg</p>
+                <p>Current Weight (Manual Log): <input type="number" id="prog-log-current-weight" class="input is-small" style="width: 80px; display: inline-block;" placeholder="Log"> kg <button id="save-prog-current-weight" class="button is-small is-link">Save</button></p>
+                <p>Logged Weight: <span id="prog-current-weight-display" class="has-text-weight-bold">N/A</span> kg</p>
+                <p>Target Ideal Weight: <span id="prog-target-weight" class="has-text-weight-bold">N/A</span> kg</p>
             </div>
              <div class="box">
-                <h3 class="title is-5">Exercise Improvement (Conceptual)</h3>
-                <p>Baseline Cardio: <span id="prog-baseline-cardio">N/A</span></p>
-                <p>Best Cardio This Week: <span id="prog-current-cardio">N/A</span></p>
+                <h3 class="title is-5">Exercise Improvement</h3>
+                <p>Baseline Cardio: <span id="prog-baseline-cardio" class="has-text-weight-bold">N/A</span></p>
+                <p>Best Cardio This Week (Conceptual): <span id="prog-current-cardio" class="has-text-weight-bold">N/A</span></p>
+                 <p>Baseline Strength: <span id="prog-baseline-strength" class="has-text-weight-bold">N/A</span></p>
+                <p>Best Strength This Week (Conceptual): <span id="prog-current-strength" class="has-text-weight-bold">N/A</span></p>
             </div>
             <div class="box">
-                <h3 class="title is-5">Mood & Stress (Conceptual Average)</h3>
-                <p>Average Mood (last 7 days): <span id="prog-avg-mood">N/A</span> / 5</p>
-                <p>Average Stress (last 7 days): <span id="prog-avg-stress">N/A</span> / 5</p>
+                <h3 class="title is-5">Mood & Stress (Last 7 days average - Conceptual)</h3>
+                <p>Average Mood: <span id="prog-avg-mood" class="has-text-weight-bold">N/A</span> / 5</p>
+                <p>Average Stress: <span id="prog-avg-stress" class="has-text-weight-bold">N/A</span> / 5</p>
             </div>
         </main>
         <nav class="nav-bar">
@@ -422,7 +513,7 @@
                 </div>
             </div>
             <div class="field mt-5">
-                 <button class="button is-link is-fullwidth">Account (Placeholder)</button>
+                 <button class="button is-link is-fullwidth">My Account (Placeholder)</button>
             </div>
              <div class="field mt-3">
                  <button class="button is-outlined is-fullwidth" id="community-forum-link">Community Forum (Link)</button>
@@ -505,13 +596,28 @@
     </div>
 
     <script>
+        // --- Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js') // Ensure sw.js is in the root
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // --- DOM Elements ---
             const pages = document.querySelectorAll('.page');
             const navItems = document.querySelectorAll('.nav-bar .nav-item');
             const splashPage = document.getElementById('splash-page');
             const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
-            // ... (add other frequently used DOM elements)
+            const themeToggleText = document.getElementById('theme-toggle-text');
+            const darkIcon = document.querySelector('.theme-toggle-icon-container .dark-icon');
+            const lightIcon = document.querySelector('.theme-toggle-icon-container .light-icon');
             const motivateMeNowButton = document.getElementById('motivate-me-now-button');
             const motivateMeModal = document.getElementById('motivate-me-modal');
             const llmChatModal = document.getElementById('llm-chat-modal');
@@ -519,17 +625,17 @@
 
             // --- App Data ---
             let appData = {
-                user: null, // { name, age, gender, weight, height, registrationDate, idealWeight, caloricDeficit, exerciseTrack, currentWeek, currentDayOfYear, lastLoginDayOfYear }
-                baseline: null, // { cardioValue, strengthValue }
-                dailyProgress: {}, // Keyed by 'weekXdayY', e.g. 'week1day1': { sleep: {}, weight: {}, ... }
-                weeklyGratitude: {}, // Keyed by 'weekX'
-                gamification: { points: 0, badges: [], dailyStreak: 0 },
+                user: null, 
+                baseline: null, 
+                dailyProgress: {}, 
+                weeklyGratitude: {}, 
+                gamification: { points: 0, badges: [], dailyStreak: 0, lastWeightLog: null },
                 settings: { notificationsEnabled: false, theme: 'dark' },
-                habitChallenge: { // For "Make Me Quit"
-                    behaviorName: "My Unwanted Habit", // User can define this later
-                    log: {}, // 'weekXdayY': { instances: 0, context: "" }
-                    trigger: null, // Identified in Week 2
-                    substitution: null // Planned in Week 4
+                habitChallenge: { 
+                    behaviorName: "My Unwanted Habit", 
+                    log: {}, 
+                    trigger: null, 
+                    substitution: null 
                 }
             };
 
@@ -540,17 +646,33 @@
 
             // --- Utility Functions ---
             const getDayOfYear = (date = new Date()) => Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-            const saveAppData = () => localStorage.setItem('transformationAppData', JSON.stringify(appData));
+            const saveAppData = () => {
+                try {
+                    localStorage.setItem('transformationAppData', JSON.stringify(appData));
+                } catch (e) {
+                    console.error("Error saving app data to localStorage:", e);
+                    // Potentially notify user if storage is full or unavailable
+                }
+            };
             const loadAppData = () => {
                 const data = localStorage.getItem('transformationAppData');
                 if (data) {
-                    appData = JSON.parse(data);
-                    // Ensure nested objects exist if new properties were added
-                    appData.gamification = appData.gamification || { points: 0, badges: [], dailyStreak: 0 };
-                    appData.settings = appData.settings || { notificationsEnabled: false, theme: 'dark' };
-                    appData.habitChallenge = appData.habitChallenge || { behaviorName: "My Unwanted Habit", log: {}, trigger: null, substitution: null };
-                    appData.dailyProgress = appData.dailyProgress || {};
-                    appData.weeklyGratitude = appData.weeklyGratitude || {};
+                    try {
+                        appData = JSON.parse(data);
+                        // Ensure nested objects exist if new properties were added after a user already has data
+                        appData.user = appData.user || null;
+                        appData.baseline = appData.baseline || null;
+                        appData.dailyProgress = appData.dailyProgress || {};
+                        appData.weeklyGratitude = appData.weeklyGratitude || {};
+                        appData.gamification = appData.gamification || { points: 0, badges: [], dailyStreak: 0, lastWeightLog: null };
+                        if(!appData.gamification.hasOwnProperty('lastWeightLog')) appData.gamification.lastWeightLog = null; // Backwards compatibility
+                        appData.settings = appData.settings || { notificationsEnabled: false, theme: 'dark' };
+                        appData.habitChallenge = appData.habitChallenge || { behaviorName: "My Unwanted Habit", log: {}, trigger: null, substitution: null };
+                    } catch (e) {
+                        console.error("Error parsing app data from localStorage:", e);
+                        // Corrupted data, might need to reset or guide user
+                        localStorage.removeItem('transformationAppData'); // Clear corrupted data
+                    }
                 }
             };
 
@@ -562,20 +684,24 @@
                 navItems.forEach(item => {
                     item.classList.toggle('is-active', item.dataset.page === pageId);
                 });
-                window.scrollTo(0,0); // Scroll to top on page change
+                window.scrollTo(0,0); 
             };
             
             const calculateCurrentChallengeDay = () => {
                 if (!appData.user || !appData.user.registrationDate) return { week: 1, day: 1, overallDay: 1 };
                 const regDate = new Date(appData.user.registrationDate);
                 const today = new Date();
+                // Set time to midnight to compare days correctly
+                regDate.setHours(0,0,0,0);
+                today.setHours(0,0,0,0);
+
                 const diffTime = Math.abs(today - regDate);
                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                 
                 let overallDay = diffDays + 1;
-                if (overallDay > TOTAL_DAYS) overallDay = TOTAL_DAYS; // Cap at max days
+                if (overallDay > TOTAL_DAYS) overallDay = TOTAL_DAYS;
 
-                const currentWeek = Math.floor((overallDay -1) / DAYS_IN_WEEK) + 1;
+                const currentWeek = Math.min(TOTAL_WEEKS, Math.floor((overallDay -1) / DAYS_IN_WEEK) + 1);
                 const dayInWeek = ((overallDay -1) % DAYS_IN_WEEK) + 1;
                 return { week: currentWeek, day: dayInWeek, overallDay: overallDay };
             };
@@ -585,27 +711,37 @@
                 return `week${week}day${day}`;
             };
             
-            const getProgressForToday = () => {
+            const getProgressForToday = (createIfMissing = true) => {
                 const key = getTodayProgressKey();
-                if (!appData.dailyProgress[key]) {
+                if (!appData.dailyProgress[key] && createIfMissing) {
                     appData.dailyProgress[key] = {
                         sleep: { completed: false, bedtime: '', wakeup: '', duration: '', targetMet: null },
                         weight: { completed: false, meals: [], water: 0, foodLog: '', nonWater: '', junkAvoided: false, fruitSnacks: false, adheredMealTimes: false, calories: null },
                         exercise: { completed: false, cardioDone: false, strengthDone: false },
-                        peace: { completed: false, mindfulnessDone: false, moodBefore: 3, stressBefore: 3, moodAfter: 3, stressAfter: 3, breathingDone: false, enjoyableActivityDone: false },
-                        tasksCompletedCount: 0 // For gamification
+                        peace: { completed: false, mindfulnessDone: false, moodBefore: 3, stressBefore: 3, moodAfter: 3, stressAfter: 3, breathingDone: false, enjoyableActivityDone: false, llmChat: [] },
+                        tasksCompletedCount: 0 
                     };
                 }
-                return appData.dailyProgress[key];
+                return appData.dailyProgress[key] || null; // Return null if not creating and not found
             };
 
 
             // --- Theme ---
+            const updateThemeMeta = (isLight) => {
+                const themeColor = isLight ? getComputedStyle(document.documentElement).getPropertyValue('--light-surface').trim() : getComputedStyle(document.documentElement).getPropertyValue('--dark-surface').trim();
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColor);
+            };
+
             const applyTheme = (isLight) => {
                 document.documentElement.classList.toggle('is-light-mode', isLight);
                 document.documentElement.classList.toggle('is-dark', !isLight);
                 if (themeToggleCheckbox) themeToggleCheckbox.checked = isLight;
+                if (darkIcon) darkIcon.style.display = isLight ? 'none' : 'inline-flex';
+                if (lightIcon) lightIcon.style.display = isLight ? 'inline-flex' : 'none';
+                if (themeToggleText) themeToggleText.textContent = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+                
                 appData.settings.theme = isLight ? 'light' : 'dark';
+                updateThemeMeta(isLight); // Update theme-color for PWA
                 saveAppData();
             };
 
@@ -613,9 +749,10 @@
             navItems.forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
-                    showPage(item.dataset.page);
-                    if (item.dataset.page === 'quit-page') renderQuitHabitPage();
-                    if (item.dataset.page === 'progress-page') renderProgressPage();
+                    const pageId = item.dataset.page;
+                    showPage(pageId);
+                    if (pageId === 'quit-page') renderQuitHabitPage();
+                    if (pageId === 'progress-page') renderProgressPage();
                 });
             });
 
@@ -623,7 +760,7 @@
                 const openModal = () => modalElement.classList.add('is-active');
                 const closeModal = () => modalElement.classList.remove('is-active');
 
-                if (openButtons) { // Can be a single button or an array of buttons
+                if (openButtons) { 
                     (Array.isArray(openButtons) ? openButtons : [openButtons]).forEach(btn => btn.addEventListener('click', openModal));
                 }
                 
@@ -632,7 +769,7 @@
             }
             
             const motivateModalControls = setupModal(motivateMeModal, motivateMeNowButton, '.modal-background, .delete, .modal-close-button');
-            const llmChatModalControls = setupModal(llmChatModal, null, '.modal-background, .delete, .modal-close-button'); // Open programmatically
+            const llmChatModalControls = setupModal(llmChatModal, null, '.modal-background, .delete, .modal-close-button'); 
 
             // --- Initial Setup Flow ---
             const handleRegistration = (e) => {
@@ -643,23 +780,31 @@
                 const weight = parseFloat(document.getElementById('reg-weight').value);
                 const height = parseInt(document.getElementById('reg-height').value);
 
-                // Basic BMI calculation for ideal weight (example)
                 const heightM = height / 100;
-                const idealBmiHealthy = 22; // Mid-point of healthy BMI
+                const idealBmiHealthy = 22; 
                 const idealWeight = Math.round(idealBmiHealthy * (heightM * heightM));
-                const caloricDeficit = 500; // Default deficit
+                // Simple BMR (Harris-Benedict approximation) - for more accuracy, use Mifflin-St Jeor
+                let bmr;
+                if (gender === 'male') {
+                    bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+                } else if (gender === 'female') {
+                    bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+                } else { // "Other" - use an average or a simpler formula if needed
+                    bmr = (88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age) + 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)) / 2;
+                }
+                const caloricDeficit = 500; // Default, can be adjusted based on goals
 
                 appData.user = {
                     name, age, gender, weight, height,
                     registrationDate: new Date().toISOString(),
-                    idealWeight, caloricDeficit,
+                    idealWeight, caloricDeficit, bmr: Math.round(bmr),
                     exerciseTrack: null,
-                    currentDayOfYear: getDayOfYear(), // For daily streak logic
+                    currentDayOfYear: getDayOfYear(), 
                     lastLoginDayOfYear: getDayOfYear()
                 };
-                appData.gamification.points = 0; // Reset points on new registration
-                appData.gamification.badges = [];
-                appData.gamification.dailyStreak = 0;
+                appData.gamification = { points: 0, badges: [], dailyStreak: 0, lastWeightLog: { date: new Date().toISOString().split('T')[0], weight: weight } };
+                appData.dailyProgress = {}; // Clear progress for new user
+                appData.weeklyGratitude = {};
 
                 saveAppData();
                 showPage('questionnaire-page');
@@ -678,7 +823,7 @@
             const handleTrackSelection = (track) => {
                 appData.user.exerciseTrack = track;
                 saveAppData();
-                initializeAppDashboard(); // Go to home
+                initializeAppDashboard(); 
             };
             
             document.getElementById('registration-form')?.addEventListener('submit', handleRegistration);
@@ -701,54 +846,64 @@
                 return false;
             };
 
+            const showDailyReminderNotification = () => {
+                if (appData.settings.notificationsEnabled && Notification.permission === 'granted') {
+                    const { week, day } = calculateCurrentChallengeDay();
+                    new Notification("Daily Tasks Reminder", { 
+                        body: `It's Week ${week}, Day ${day}! Don't forget your 10 Week Up tasks!`, 
+                        icon: 'icons/icon-192.png' // Make sure this icon exists
+                    });
+                }
+            };
+
             document.getElementById('request-notification-permission')?.addEventListener('click', async () => {
                 const granted = await requestNotificationPermission();
                 if (granted) {
                     appData.settings.notificationsEnabled = true;
                     document.getElementById('notifications-enabled-switch').checked = true;
-                    new Notification('10 Week Transformation', { body: 'Notifications enabled!' });
+                    new Notification('10 Week Transformation', { body: 'Notifications enabled!', icon: 'icons/icon-192.png' });
                     saveAppData();
                 }
             });
-            document.getElementById('notifications-enabled-switch')?.addEventListener('change', (e) => {
+            document.getElementById('notifications-enabled-switch')?.addEventListener('change', async (e) => {
                 appData.settings.notificationsEnabled = e.target.checked;
-                if(e.target.checked) requestNotificationPermission(); // Request if enabling
+                if(e.target.checked) {
+                    const granted = await requestNotificationPermission();
+                    if(!granted) { // If permission denied or dismissed, uncheck the box
+                        e.target.checked = false;
+                        appData.settings.notificationsEnabled = false;
+                    }
+                }
                 saveAppData();
             });
 
 
             // --- Daily Task Card Rendering ---
             const renderDailyTasks = () => {
-                homeCardCollection.innerHTML = ''; // Clear existing cards
+                homeCardCollection.innerHTML = ''; 
                 const { week, day, overallDay } = calculateCurrentChallengeDay();
                 if (overallDay > TOTAL_DAYS) {
                      homeCardCollection.innerHTML = `<div class="card"><div class="card-content"><p class="title is-4 has-text-centered">Congratulations, ${appData.user.name}!</p><p class="has-text-centered">You've completed the 10 Week Transformation Challenge!</p></div></div>`;
                      return;
                 }
 
-                const todayProgress = getProgressForToday();
+                const todayProgress = getProgressForToday(); // Creates entry if not exists
 
-                // Task: Sleep
                 const sleepCard = createSleepCard(week, day, todayProgress.sleep);
                 homeCardCollection.appendChild(sleepCard);
 
-                // Task: Weight Control
                 const weightCard = createWeightControlCard(week, day, todayProgress.weight);
                 homeCardCollection.appendChild(weightCard);
                 
-                // Task: Exercise
                 const exerciseCard = createExerciseCard(week, day, todayProgress.exercise);
                 homeCardCollection.appendChild(exerciseCard);
 
-                // Task: Peace of Mind
                 const peaceCard = createPeaceOfMindCard(week, day, todayProgress.peace);
                 homeCardCollection.appendChild(peaceCard);
 
-                // Task: Quit Habit (Summary on Home, details on Quit Page)
                 const quitHabitCard = createQuitHabitSummaryCard(week, day);
                 homeCardCollection.appendChild(quitHabitCard);
 
-                // Add event listeners for card interactions (checkboxes, inputs)
                 setupCardEventListeners();
             };
 
@@ -758,20 +913,23 @@
                 const cardContent = document.createElement('div');
                 cardContent.className = 'card-content';
                 const cardTitle = document.createElement('p');
-                cardTitle.className = 'title is-5'; // Smaller title for cards
+                cardTitle.className = 'title is-5'; 
                 cardTitle.innerHTML = `<span class="icon is-small mr-2"><i class="${iconClass}"></i></span>${title}`;
                 cardContent.appendChild(cardTitle);
                 card.appendChild(cardContent);
                 return {card, cardContent};
             };
 
-            // --- Specific Card Creation Functions (Examples) ---
+            // --- Specific Card Creation Functions ---
             function createSleepCard(week, day, sleepData) {
                 const {card, cardContent} = createTaskCard('Sleep Goals', 'fas fa-bed');
                 let content = '';
+                const targetBedtime = "22:00"; 
+                const targetWakeup = "06:00";
+
                 if (week === 1) {
                     content += `
-                        <p class="is-size-7 mb-2">Week 1: Track your natural sleep patterns.</p>
+                        <p class="is-size-7 mb-2">Week 1: Track natural sleep. Aim for consistent bed/wake times.</p>
                         <div class="field">
                             <label class="label">Bedtime</label>
                             <div class="control"><input type="time" class="input sleep-input" data-field="bedtime" value="${sleepData.bedtime || ''}"></div>
@@ -779,15 +937,10 @@
                         <div class="field">
                             <label class="label">Wake-up Time</label>
                             <div class="control"><input type="time" class="input sleep-input" data-field="wakeup" value="${sleepData.wakeup || ''}"></div>
-                        </div>
-                        <p class="is-size-7 mt-2">Total Sleep: <strong id="sleep-duration">${sleepData.duration || 'N/A'}</strong></p>
-                    `;
-                } else { // Weeks 2-10
-                    // Simplified: Assume a target of 8 hours for now. Could be user-settable.
-                    const targetBedtime = "22:00"; 
-                    const targetWakeup = "06:00";
+                        </div>`;
+                } else { 
                     content += `
-                        <p class="is-size-7 mb-2">Target: Bed by ${targetBedtime}, Awake by ${targetWakeup}. (Aim for 8 hours)</p>
+                        <p class="is-size-7 mb-2">Target: Bed by ${targetBedtime}, Awake by ${targetWakeup}. (Aim for 7-9 hours)</p>
                         <div class="field">
                             <label class="label">Actual Bedtime</label>
                             <div class="control"><input type="time" class="input sleep-input" data-field="bedtime" value="${sleepData.bedtime || ''}"></div>
@@ -796,34 +949,30 @@
                             <label class="label">Actual Wake-up Time</label>
                             <div class="control"><input type="time" class="input sleep-input" data-field="wakeup" value="${sleepData.wakeup || ''}"></div>
                         </div>
-                        <p class="is-size-7 mt-1">Total Sleep: <strong id="sleep-duration">${sleepData.duration || 'N/A'}</strong></p>
-                        <p class="is-size-7 mt-1">Met Target Window (within 30min): <strong id="sleep-target-met">${sleepData.targetMet === null ? 'Pending' : (sleepData.targetMet ? 'Yes' : 'No')}</strong></p>
-                    `;
+                        <p class="is-size-7 mt-1">Met Target Window (within 30min): <strong id="sleep-target-met">${sleepData.targetMet === null ? 'Pending' : (sleepData.targetMet ? 'Yes' : 'No')}</strong></p>`;
                 }
-                content += createTaskDoneCheckbox('sleep', sleepData.completed, 'Sleep tracking complete?');
+                content += `<p class="is-size-7 mt-1">Total Sleep: <strong id="sleep-duration">${sleepData.duration || 'N/A'}</strong></p>`;
+                content += createTaskDoneCheckbox('sleep', sleepData.completed, 'Sleep tracking done?');
                 cardContent.insertAdjacentHTML('beforeend', content);
                 if (sleepData.completed) card.classList.add('is-task-done');
                 return card;
             }
 
             function createWeightControlCard(week, day, weightData) {
-                const {card, cardContent} = createTaskCard('Weight Control', 'fas fa-weight');
-                let content = `<p class="is-size-7 mb-2">Ideal Weight: ${appData.user.idealWeight} kg. Target Deficit: ${appData.user.caloricDeficit} kcal/day.</p>`;
+                const {card, cardContent} = createTaskCard('Weight Control', 'fas fa-balance-scale-right'); // Changed icon
+                let content = `<p class="is-size-7 mb-2">Ideal W: ${appData.user.idealWeight} kg. Target Calorie Goal: ~${appData.user.bmr - appData.user.caloricDeficit} kcal.</p>`;
                 
-                content += `<div class="field"><label class="label">Water Intake (glasses)</label><div class="control"><input type="number" class="input weight-input" data-field="water" value="${weightData.water || 0}" min="0"></div></div>`;
-                content += `<div class="field"><label class="label">Log Meals/Snacks (briefly)</label><div class="control"><textarea class="textarea is-small weight-input" data-field="foodLog" rows="2" placeholder="e.g., Breakfast: Oats; Lunch: Salad...">${weightData.foodLog || ''}</textarea></div></div>`;
+                content += `<div class="field"><label class="label">Water Intake (glasses, ~250ml each)</label><div class="control"><input type="number" class="input weight-input" data-field="water" value="${weightData.water || 0}" min="0"></div></div>`;
+                content += `<div class="field"><label class="label">Log Meals/Snacks (briefly)</label><div class="control"><textarea class="textarea is-small weight-input" data-field="foodLog" rows="2" placeholder="e.g., B: Oats; L: Salad...">${weightData.foodLog || ''}</textarea></div></div>`;
 
                 if (week >= 2) {
                     content += `<div class="field"><label class="label">Non-water Drinks (note any)</label><div class="control"><input type="text" class="input weight-input" data-field="nonWater" value="${weightData.nonWater || ''}" placeholder="e.g., 1 coffee, 1 soda"></div></div>`;
-                    content += `<div class="field"><label class="checkbox"><input type="checkbox" class="weight-input" data-field="junkAvoided" ${weightData.junkAvoided ? 'checked' : ''}> Avoided junk food today</label></div>`;
-                    content += `<div class="field"><label class="checkbox"><input type="checkbox" class="weight-input" data-field="fruitSnacks" ${weightData.fruitSnacks ? 'checked' : ''}> Chose fruits for snacks</label></div>`;
-                    content += `<div class="field"><label class="checkbox"><input type="checkbox" class="weight-input" data-field="adheredMealTimes" ${weightData.adheredMealTimes ? 'checked' : ''}> Adhered to set meal times (B, L, early D, late S)</label></div>`;
+                    content += `<div class="field"><label class="checkbox task-done-checkbox-label"><input type="checkbox" class="weight-input" data-field="junkAvoided" ${weightData.junkAvoided ? 'checked' : ''}><span class="ml-1">Avoided junk food today</span></label></div>`;
+                    content += `<div class="field"><label class="checkbox task-done-checkbox-label"><input type="checkbox" class="weight-input" data-field="fruitSnacks" ${weightData.fruitSnacks ? 'checked' : ''}><span class="ml-1">Chose fruits for snacks</span></label></div>`;
+                    content += `<div class="field"><label class="checkbox task-done-checkbox-label"><input type="checkbox" class="weight-input" data-field="adheredMealTimes" ${weightData.adheredMealTimes ? 'checked' : ''}><span class="ml-1">Adhered to set meal times</span></label></div>`;
                 }
                 if (week >= 3) {
                      content += `<div class="field"><label class="label">Estimated Caloric Intake (kcal)</label><div class="control"><input type="number" class="input weight-input" data-field="calories" value="${weightData.calories || ''}" placeholder="e.g., 1800"></div></div>`;
-                     // Simplified target display, BMR not calculated here
-                     const estimatedTargetCalories = 2000 - appData.user.caloricDeficit; // Example
-                     content += `<p class="is-size-7">Rough Target: ~${estimatedTargetCalories} kcal (adjust based on your BMR and activity)</p>`;
                 }
                 content += createTaskDoneCheckbox('weight', weightData.completed, 'Weight control tasks logged?');
                 cardContent.insertAdjacentHTML('beforeend', content);
@@ -834,9 +983,11 @@
             function createExerciseCard(week, day, exerciseData) {
                 const {card, cardContent} = createTaskCard('Daily Exercise', 'fas fa-dumbbell');
                 const routine = getExerciseRoutine(appData.user.exerciseTrack, week, appData.user.gender, appData.user.age, appData.baseline);
-                let content = `<p class="is-size-7 mb-2">Track: ${appData.user.exerciseTrack}</p>`;
-                content += `<div class="content is-small"><strong>Cardio:</strong> ${routine.cardio} <label class="checkbox ml-2 is-pulled-right"><input type="checkbox" class="exercise-input" data-field="cardioDone" ${exerciseData.cardioDone ? 'checked' : ''}> Done</label><br>`;
-                content += `<strong>Strength:</strong> ${routine.strength} <label class="checkbox ml-2 is-pulled-right"><input type="checkbox" class="exercise-input" data-field="strengthDone" ${exerciseData.strengthDone ? 'checked' : ''}> Done</label></div>`;
+                let content = `<p class="is-size-7 mb-2">Track: <strong>${appData.user.exerciseTrack.charAt(0).toUpperCase() + appData.user.exerciseTrack.slice(1)}</strong></p>`;
+                content += `<div class="content is-small">
+                                <div class="mb-2"><strong>Cardio:</strong> ${routine.cardio} <label class="checkbox task-done-checkbox-label is-pulled-right"><input type="checkbox" class="exercise-input" data-field="cardioDone" ${exerciseData.cardioDone ? 'checked' : ''}><span class="ml-1">Done</span></label></div>
+                                <div><strong>Strength:</strong> ${routine.strength} <label class="checkbox task-done-checkbox-label is-pulled-right"><input type="checkbox" class="exercise-input" data-field="strengthDone" ${exerciseData.strengthDone ? 'checked' : ''}><span class="ml-1">Done</span></label></div>
+                            </div>`;
                 
                 content += createTaskDoneCheckbox('exercise', exerciseData.completed, 'Exercise routines complete?');
                 cardContent.insertAdjacentHTML('beforeend', content);
@@ -845,48 +996,50 @@
             }
 
             function getExerciseRoutine(track, week, gender, age, baseline) {
-                // Simplified routine generation
-                let cardioDuration = 15 + (week * 2); // Mins
-                let strengthReps = (baseline.strengthValue || 5) + week;
+                let cardioDuration = 15 + (week * 2); 
+                let strengthReps = Math.max(5, (baseline.strengthValue || 5)) + week;
                 let strengthSets = 2;
 
                 if (track === 'beginner') {
-                    cardioDuration = 10 + week; strengthReps = Math.max(5, (baseline.strengthValue || 3)) + Math.floor(week/2); strengthSets=2;
+                    cardioDuration = Math.max(10, 10 + week); strengthReps = Math.max(5, (baseline.strengthValue || 3)) + Math.floor(week/1.5); strengthSets=2;
                 } else if (track === 'advanced') {
-                    cardioDuration = 20 + (week * 3); strengthReps = (baseline.strengthValue || 8) + (week*2); strengthSets=3;
+                    cardioDuration = Math.max(20, 20 + (week * 2.5)); strengthReps = Math.max(8, (baseline.strengthValue || 8)) + Math.floor(week*1.5); strengthSets=3;
                 }
                 
-                // Cap escalation
                 cardioDuration = Math.min(cardioDuration, 60);
-                strengthReps = Math.min(strengthReps, 30);
+                strengthReps = Math.min(strengthReps, gender === 'female' && age > 40 ? 20 : 25); // Example adjustment
 
                 return {
-                    cardio: `${cardioDuration} minutes of moderate intensity (e.g., brisk walk, jog, cycle).`,
-                    strength: `${strengthSets} sets of ${strengthReps} reps (e.g., push-ups variations, squats, lunges, planks). Choose 3-4 exercises.`
+                    cardio: `${Math.round(cardioDuration)} minutes of moderate intensity (e.g., brisk walk, jog, cycle).`,
+                    strength: `${strengthSets} sets of ${Math.round(strengthReps)} reps (e.g., push-ups, squats, lunges, planks). Choose 3-4 exercises.`
                 };
             }
 
             function createPeaceOfMindCard(week, day, peaceData) {
                 const {card, cardContent} = createTaskCard('Peace of Mind', 'fas fa-brain');
-                let content = `<div class="field"><label class="checkbox"><input type="checkbox" class="peace-input" data-field="mindfulnessDone" ${peaceData.mindfulnessDone ? 'checked' : ''}> 1-min Mindfulness (timer below)</label> <button class="button is-small is-outlined is-pulled-right" id="start-mindfulness-timer">Start Timer</button><p id="mindfulness-timer-display" class="is-size-7 has-text-centered"></p></div>`;
+                let content = `<div class="field is-flex is-align-items-center is-justify-content-space-between mb-2">
+                                <label class="checkbox task-done-checkbox-label"><input type="checkbox" class="peace-input" data-field="mindfulnessDone" ${peaceData.mindfulnessDone ? 'checked' : ''}><span class="ml-1">1-min Mindfulness</span></label> 
+                                <button class="button is-small is-outlined" id="start-mindfulness-timer">Start Timer</button>
+                               </div>
+                               <p id="mindfulness-timer-display" class="is-size-7 has-text-centered mb-2"></p>`;
                 
                 content += `
-                    <div class="columns is-mobile is-gapless">
-                        <div class="column field"><label class="label is-size-7">Mood (Before)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="moodBefore" min="1" max="5" value="${peaceData.moodBefore || 3}"></div></div>
-                        <div class="column field"><label class="label is-size-7">Stress (Before)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="stressBefore" min="1" max="5" value="${peaceData.stressBefore || 3}"></div></div>
+                    <div class="columns is-mobile is-gapless mb-0">
+                        <div class="column field mr-1"><label class="label is-size-7">Mood Before (1-5)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="moodBefore" min="1" max="5" value="${peaceData.moodBefore || 3}"></div></div>
+                        <div class="column field ml-1"><label class="label is-size-7">Stress Before (1-5)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="stressBefore" min="1" max="5" value="${peaceData.stressBefore || 3}"></div></div>
                     </div>
-                    <div class="columns is-mobile is-gapless">
-                        <div class="column field"><label class="label is-size-7">Mood (After)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="moodAfter" min="1" max="5" value="${peaceData.moodAfter || 3}"></div></div>
-                        <div class="column field"><label class="label is-size-7">Stress (After)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="stressAfter" min="1" max="5" value="${peaceData.stressAfter || 3}"></div></div>
+                     <div class="columns is-mobile is-gapless">
+                        <div class="column field mr-1"><label class="label is-size-7">Mood After (1-5)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="moodAfter" min="1" max="5" value="${peaceData.moodAfter || 3}"></div></div>
+                        <div class="column field ml-1"><label class="label is-size-7">Stress After (1-5)</label><div class="control"><input type="range" class="peace-input slider is-small is-circle is-fullwidth" data-field="stressAfter" min="1" max="5" value="${peaceData.stressAfter || 3}"></div></div>
                     </div>
-                `;
-                content += `<div class="field"><label class="checkbox"><input type="checkbox" class="peace-input" data-field="breathingDone" ${peaceData.breathingDone ? 'checked' : ''}> Breathing Exercise (e.g., 4-4-6, 5 reps)</label></div>`;
-                content += `<div class="field"><button class="button is-small is-link is-outlined is-fullwidth" id="open-llm-chat-peace">Talk about Stress Triggers (Simulated Chat)</button></div>`;
-                content += `<div class="field"><label class="checkbox"><input type="checkbox" class="peace-input" data-field="enjoyableActivityDone" ${peaceData.enjoyableActivityDone ? 'checked' : ''}> 30 mins Enjoyable Activity</label></div>`;
+                `; // Mood/stress sliders
+                content += `<div class="field"><label class="checkbox task-done-checkbox-label"><input type="checkbox" class="peace-input" data-field="breathingDone" ${peaceData.breathingDone ? 'checked' : ''}><span class="ml-1">Breathing Exercise (e.g., 4-7-8)</span></label></div>`;
+                content += `<div class="field"><button class="button is-small is-link is-outlined is-fullwidth" id="open-llm-chat-peace">Talk: Stress Triggers (Simulated)</button></div>`;
+                content += `<div class="field"><label class="checkbox task-done-checkbox-label"><input type="checkbox" class="peace-input" data-field="enjoyableActivityDone" ${peaceData.enjoyableActivityDone ? 'checked' : ''}><span class="ml-1">30 mins Enjoyable Activity</span></label></div>`;
 
-                if (week >= 2 && day === 7) { // Weekly gratitude on Day 7 of week 2+
+                if (week >= 2 && day === 7) { 
                     const gratitudeKey = `week${week}`;
-                    content += `<div class="field mt-3"><label class="label">Weekly Gratitude</label><div class="control"><textarea class="textarea is-small peace-input" data-field="weeklyGratitude" data-weekkey="${gratitudeKey}" rows="2" placeholder="One thing you're grateful for this week...">${appData.weeklyGratitude[gratitudeKey] || ''}</textarea></div></div>`;
+                    content += `<div class="field mt-3"><label class="label">Weekly Gratitude (due today!)</label><div class="control"><textarea class="textarea is-small peace-input" data-field="weeklyGratitude" data-weekkey="${gratitudeKey}" rows="2" placeholder="One thing you're grateful for this week...">${appData.weeklyGratitude[gratitudeKey] || ''}</textarea></div></div>`;
                 }
                 content += createTaskDoneCheckbox('peace', peaceData.completed, 'Peace of mind tasks done?');
                 cardContent.insertAdjacentHTML('beforeend', content);
@@ -895,24 +1048,20 @@
             }
             
             function createQuitHabitSummaryCard(week, day) {
-                const {card, cardContent} = createTaskCard('Habit Change Focus', 'fas fa-times-circle');
-                let summaryText = `Review and update your progress on the 'Habit' page.`;
-                if (week === 1) summaryText += ` Focus: Awareness & Tracking.`;
-                else if (week === 2) summaryText += ` Focus: Identify Trigger.`;
-                else if (week === 3) summaryText += ` Focus: Limit Trigger Exposure.`;
-                else summaryText += ` Focus: Practice Substitution.`;
-
+                const {card, cardContent} = createTaskCard(`Habit: ${appData.habitChallenge.behaviorName}`, 'fas fa-route'); // Changed icon
+                let summaryText = `Go to 'Habit' page for today's focus.`;
+                // This card is mainly a link, no specific "done" state here.
                 cardContent.innerHTML += `<p class="is-size-7">${summaryText}</p><button class="button is-small is-link is-outlined mt-2 is-fullwidth" onclick="document.querySelector('.nav-item[data-page=quit-page]').click()">Go to Habit Page</button>`;
-                // This card doesn't have its own 'done' state, it's a link
                 return card;
             }
 
             function createTaskDoneCheckbox(taskType, isChecked, labelText) {
+                const iconClass = isChecked ? 'fa-check-square' : 'fa-square';
                 return `
                     <div class="task-done-checkbox-container">
                         <label class="checkbox task-done-checkbox-label">
                             <input type="checkbox" class="task-overall-done-checkbox" data-tasktype="${taskType}" ${isChecked ? 'checked' : ''}>
-                            <span class="icon mr-1"><i class="far ${isChecked ? 'fa-check-square' : 'fa-square'}"></i></span> ${labelText || 'Mark all as complete for this card?'}
+                            <span class="icon mr-1"><i class="far ${iconClass}"></i></span> ${labelText || 'Mark all as complete?'}
                         </label>
                     </div>`;
             }
@@ -925,29 +1074,39 @@
                     input.addEventListener('change', (e) => {
                         const field = e.target.dataset.field;
                         getProgressForToday().sleep[field] = e.target.value;
-                        // Calculate duration & targetMet
                         const { bedtime, wakeup } = getProgressForToday().sleep;
                         if (bedtime && wakeup) {
                             const [bh, bm] = bedtime.split(':').map(Number);
                             const [wh, wm] = wakeup.split(':').map(Number);
-                            let diff = (wh * 60 + wm) - (bh * 60 + bm);
-                            if (diff < 0) diff += 24 * 60; // Account for overnight
-                            const hours = Math.floor(diff / 60);
-                            const mins = diff % 60;
+                            let diffMins = (wh * 60 + wm) - (bh * 60 + bm);
+                            if (diffMins < 0) diffMins += 24 * 60; 
+                            const hours = Math.floor(diffMins / 60);
+                            const mins = diffMins % 60;
                             getProgressForToday().sleep.duration = `${hours}h ${mins}m`;
-                            document.getElementById('sleep-duration').textContent = getProgressForToday().sleep.duration;
+                            const durationDisplay = document.getElementById('sleep-duration');
+                            if(durationDisplay) durationDisplay.textContent = getProgressForToday().sleep.duration;
                             
                             const { week } = calculateCurrentChallengeDay();
-                            if(week > 1) { // Check target adherence for week 2+
-                                const targetBedtimeMinutes = 22 * 60;
-                                const targetWakeupMinutes = 6 * 60 + (24 * 60); // Next day
-                                const actualBedtimeMinutes = bh * 60 + bm;
-                                const actualWakeupMinutes = (wh * 60 + wm) + (wh < bh ? 24*60 : 0); // Handle overnight for wakeup
+                            if(week > 1) { 
+                                const targetBedtime = 22 * 60; // 10 PM in minutes
+                                const targetWakeup = 6 * 60;   // 6 AM in minutes
+                                const actualBedtimeMins = bh * 60 + bm;
+                                let actualWakeupMins = wh * 60 + wm;
+                                if (actualWakeupMins < actualBedtimeMins) actualWakeupMins += 24*60; // Next day for wakeup
 
-                                const bedDiff = Math.abs(actualBedtimeMinutes - targetBedtimeMinutes);
-                                const wakeDiff = Math.abs(actualWakeupMinutes - targetWakeupMinutes);
-                                getProgressForToday().sleep.targetMet = (bedDiff <= 30 && wakeDiff <= 30);
-                                document.getElementById('sleep-target-met').textContent = getProgressForToday().sleep.targetMet ? 'Yes' : 'No';
+                                const bedDiff = Math.abs(actualBedtimeMins - targetBedtime);
+                                // For wakeup, ensure it's compared to targetWakeup relative to targetBedtime (i.e., next day)
+                                const expectedWakeupAfterTargetBed = targetBedtime + (8*60); // Example: 8 hours after target bedtime
+                                const wakeDiffFromTarget = Math.abs(actualWakeupMins - (targetBedtime + (8*60) % (24*60) ) );
+
+
+                                // Simpler check: within 30 mins of 22:00 and 06:00 respectively.
+                                const isBedtimeMet = Math.abs(actualBedtimeMins - (22*60)) <= 30 || Math.abs(actualBedtimeMins - (22*60 + 24*60)) <=30 ; // Handle midnight crossing for bedtime
+                                const isWakeupTimeMet = Math.abs( (wh*60+wm) - (6*60) ) <= 30;
+
+                                getProgressForToday().sleep.targetMet = isBedtimeMet && isWakeupTimeMet;
+                                const targetMetDisplay = document.getElementById('sleep-target-met');
+                                if(targetMetDisplay) targetMetDisplay.textContent = getProgressForToday().sleep.targetMet ? 'Yes' : 'No';
                             }
                         }
                         saveAppData();
@@ -969,6 +1128,15 @@
                     input.addEventListener('change', (e) => {
                         const field = e.target.dataset.field;
                         getProgressForToday().exercise[field] = e.target.checked;
+                        // Auto-check main exercise if both sub-tasks are done
+                        const exData = getProgressForToday().exercise;
+                        if(exData.cardioDone && exData.strengthDone) {
+                           const mainExCheckbox = document.querySelector('.task-overall-done-checkbox[data-tasktype="exercise"]');
+                           if(mainExCheckbox && !mainExCheckbox.checked) {
+                                mainExCheckbox.checked = true;
+                                mainExCheckbox.dispatchEvent(new Event('change')); // Trigger its change handler
+                           }
+                        }
                         saveAppData();
                     });
                 });
@@ -981,13 +1149,16 @@
                             const weekKey = e.target.dataset.weekkey;
                             appData.weeklyGratitude[weekKey] = e.target.value;
                         } else {
-                            getProgressForToday().peace[field] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+                            getProgressForToday().peace[field] = e.target.type === 'checkbox' ? e.target.checked : parseInt(e.target.value); // parseInt for sliders
                         }
                         saveAppData();
                     });
                 });
                 document.getElementById('start-mindfulness-timer')?.addEventListener('click', startMindfulnessTimer);
                 document.getElementById('open-llm-chat-peace')?.addEventListener('click', () => {
+                    // Load chat history for today if exists
+                    const todayPeaceData = getProgressForToday().peace;
+                    peaceChatHistory = todayPeaceData.llmChat || [];
                     renderLlmChatHistory('peace');
                     llmChatModalControls.openModal();
                 });
@@ -999,17 +1170,20 @@
                         const taskType = e.target.dataset.tasktype;
                         const isChecked = e.target.checked;
                         const icon = e.target.parentElement.querySelector('.icon i');
+                        const card = e.target.closest('.card');
+                        
                         getProgressForToday()[taskType].completed = isChecked;
                         
                         if (isChecked) {
-                            icon.className = 'fas fa-check-square';
-                            e.target.closest('.card').classList.add('is-task-done');
-                            addPoints(10); // Add points for completing a card's tasks
+                            icon.className = 'far fa-check-square'; // Font Awesome 5 syntax
+                            if (card) card.classList.add('is-task-done');
+                            addPoints(10); 
                         } else {
-                            icon.className = 'far fa-square';
-                            e.target.closest('.card').classList.remove('is-task-done');
-                            addPoints(-10); // Deduct if unchecking (ensure points don't go < 0)
+                            icon.className = 'far fa-square'; // Font Awesome 5 syntax
+                            if (card) card.classList.remove('is-task-done');
+                            addPoints(-10); 
                         }
+                        checkAllDailyTasksCompletion(); // Check for streak and weekly badge
                         updateGamificationDisplay();
                         saveAppData();
                     });
@@ -1023,20 +1197,23 @@
                 const timerDisplay = document.getElementById('mindfulness-timer-display');
                 if(!timerDisplay) return;
                 timerDisplay.textContent = `Time left: ${timeLeft}s`;
+                const startButton = document.getElementById('start-mindfulness-timer');
+                if(startButton) startButton.disabled = true;
+
                 mindfulnessInterval = setInterval(() => {
                     timeLeft--;
                     timerDisplay.textContent = `Time left: ${timeLeft}s`;
                     if (timeLeft <= 0) {
                         clearInterval(mindfulnessInterval);
-                        timerDisplay.textContent = "Done!";
-                        // Auto-check mindfulness if desired, or just notify
+                        timerDisplay.textContent = "Mindfulness Complete!";
+                        if(startButton) startButton.disabled = false;
                         const mindfulnessCheckbox = document.querySelector('.peace-input[data-field="mindfulnessDone"]');
                         if(mindfulnessCheckbox && !mindfulnessCheckbox.checked) {
-                            // mindfulnessCheckbox.checked = true;
-                            // getProgressForToday().peace.mindfulnessDone = true;
-                            // saveAppData();
-                            // Could also trigger a small notification
+                             mindfulnessCheckbox.checked = true;
+                             mindfulnessCheckbox.dispatchEvent(new Event('change')); // Trigger change for saving
                         }
+                         addPoints(2); // Small bonus for using timer
+                         updateGamificationDisplay();
                     }
                 }, 1000);
             }
@@ -1051,12 +1228,17 @@
                 }
                 const { week } = calculateCurrentChallengeDay();
                 const todayKey = getTodayProgressKey();
-                if (!appData.habitChallenge.log[todayKey]) appData.habitChallenge.log[todayKey] = { instances: 0, context: ""};
-                let html = `<h3 class="title is-4">Week ${week}: ${appData.habitChallenge.behaviorName}</h3>`;
+                if (!appData.habitChallenge.log[todayKey]) appData.habitChallenge.log[todayKey] = { instances: 0, context: "", completedToday: false };
+                
+                let html = `<div class="field">
+                                <label class="label">Name the Unhealthy Behavior You Want to Change:</label>
+                                <input type="text" class="input mb-3" id="habit-name-input" value="${appData.habitChallenge.behaviorName}">
+                            </div>
+                            <h3 class="title is-4">Week ${week}: Focus on ${appData.habitChallenge.behaviorName}</h3>`;
 
                 if (week === 1) { // Awareness
                     html += `
-                        <p><strong>Focus: Awareness.</strong> Track every instance of the behavior today.</p>
+                        <p class="mb-2"><strong>Focus: Awareness.</strong> Track every instance of the behavior today.</p>
                         <div class="field">
                             <label class="label">Number of Instances Today</label>
                             <input type="number" class="input" id="habit-instances" value="${appData.habitChallenge.log[todayKey].instances}" min="0">
@@ -1067,7 +1249,7 @@
                         </div>`;
                 } else if (week === 2) { // Identify Trigger
                      html += `
-                        <p><strong>Focus: Identify One Key Trigger.</strong> Based on last week's logs.</p>
+                        <p class="mb-2"><strong>Focus: Identify One Key Trigger.</strong> Based on last week's logs.</p>
                         <div class="field">
                             <label class="label">Your Identified Main Trigger</label>
                             <input type="text" class="input" id="habit-trigger" value="${appData.habitChallenge.trigger || ''}" placeholder="e.g., Feeling bored, specific time/place">
@@ -1076,33 +1258,51 @@
                         <div class="field"><label class="label">Instances Today</label><input type="number" class="input" id="habit-instances" value="${appData.habitChallenge.log[todayKey].instances}" min="0"></div>`;
                 } else if (week === 3) { // Limit Exposure
                     html += `
-                        <p><strong>Focus: Limit Exposure to Trigger.</strong> Your trigger: <strong>${appData.habitChallenge.trigger || 'Not set'}</strong></p>
-                        <div class="field"><label class="checkbox"><input type="checkbox" id="habit-limit-exposure" ${appData.habitChallenge.log[todayKey]?.limitExposureDone ? 'checked' : ''}> I actively tried to limit exposure to my trigger today.</label></div>
+                        <p class="mb-2"><strong>Focus: Limit Exposure to Trigger.</strong> Your trigger: <strong>${appData.habitChallenge.trigger || 'Not set'}</strong></p>
+                        <div class="field"><label class="checkbox task-done-checkbox-label"><input type="checkbox" id="habit-limit-exposure" ${appData.habitChallenge.log[todayKey]?.limitExposureDone ? 'checked' : ''}><span class="ml-1">I actively tried to limit exposure to my trigger today.</span></label></div>
                         <p class="is-size-7">Continue logging instances.</p>
                         <div class="field"><label class="label">Instances Today</label><input type="number" class="input" id="habit-instances" value="${appData.habitChallenge.log[todayKey].instances}" min="0"></div>`;
                 } else { // Weeks 4-10: Practice Substitution
                      html += `
-                        <p><strong>Focus: Plan & Practice Substitution.</strong> For trigger: <strong>${appData.habitChallenge.trigger || 'Not set'}</strong></p>
+                        <p class="mb-2"><strong>Focus: Plan & Practice Substitution.</strong> For trigger: <strong>${appData.habitChallenge.trigger || 'Not set'}</strong></p>
                         <div class="field">
                             <label class="label">Your Substitution Behavior</label>
                             <input type="text" class="input" id="habit-substitution" value="${appData.habitChallenge.substitution || ''}" placeholder="e.g., Go for a short walk, drink water">
                         </div>
-                        <div class="field"><label class="checkbox"><input type="checkbox" id="habit-practice-substitution" ${appData.habitChallenge.log[todayKey]?.substitutionPracticed ? 'checked' : ''}> I practiced my substitution behavior when triggered (or if no trigger, I mentally rehearsed it).</label></div>
+                        <div class="field"><label class="checkbox task-done-checkbox-label"><input type="checkbox" id="habit-practice-substitution" ${appData.habitChallenge.log[todayKey]?.substitutionPracticed ? 'checked' : ''}><span class="ml-1">I practiced my substitution behavior when triggered (or if no trigger, I mentally rehearsed it).</span></label></div>
                         <p class="is-size-7">Continue logging instances.</p>
                         <div class="field"><label class="label">Instances Today</label><input type="number" class="input" id="habit-instances" value="${appData.habitChallenge.log[todayKey].instances}" min="0"></div>`;
                 }
+                html += `<div class="field mt-3"><label class="checkbox task-done-checkbox-label"><input type="checkbox" id="habit-completed-today" ${appData.habitChallenge.log[todayKey].completedToday ? 'checked' : ''}><span class="ml-1">Mark today's habit task as complete</span></label></div>`;
                 html += `<button class="button is-primary mt-4" id="save-habit-data">Save Habit Log for Today</button>`;
                 contentDiv.innerHTML = html;
 
                 // Event listeners for habit page inputs
+                document.getElementById('habit-name-input')?.addEventListener('change', (e) => {
+                    appData.habitChallenge.behaviorName = e.target.value || "My Unwanted Habit";
+                    // Re-render title if needed or just save
+                    saveAppData();
+                });
                 document.getElementById('save-habit-data')?.addEventListener('click', () => {
                     const todayKey = getTodayProgressKey();
+                    appData.habitChallenge.behaviorName = document.getElementById('habit-name-input')?.value || appData.habitChallenge.behaviorName;
                     appData.habitChallenge.log[todayKey].instances = parseInt(document.getElementById('habit-instances')?.value || 0);
                     if(document.getElementById('habit-context')) appData.habitChallenge.log[todayKey].context = document.getElementById('habit-context').value;
                     if(document.getElementById('habit-trigger')) appData.habitChallenge.trigger = document.getElementById('habit-trigger').value;
                     if(document.getElementById('habit-substitution')) appData.habitChallenge.substitution = document.getElementById('habit-substitution').value;
                     if(document.getElementById('habit-limit-exposure')) appData.habitChallenge.log[todayKey].limitExposureDone = document.getElementById('habit-limit-exposure').checked;
                     if(document.getElementById('habit-practice-substitution')) appData.habitChallenge.log[todayKey].substitutionPracticed = document.getElementById('habit-practice-substitution').checked;
+                    
+                    const completedTodayCheckbox = document.getElementById('habit-completed-today');
+                    if(completedTodayCheckbox) {
+                        const wasCompleted = appData.habitChallenge.log[todayKey].completedToday;
+                        const isNowCompleted = completedTodayCheckbox.checked;
+                        appData.habitChallenge.log[todayKey].completedToday = isNowCompleted;
+                        if (isNowCompleted && !wasCompleted) addPoints(10);
+                        if (!isNowCompleted && wasCompleted) addPoints(-10); // If unchecking
+                    }
+
+                    updateGamificationDisplay();
                     saveAppData();
                     alert('Habit log saved!');
                 });
@@ -1113,14 +1313,46 @@
                 if (!appData.user) return;
                 document.getElementById('prog-initial-weight').textContent = appData.user.weight;
                 document.getElementById('prog-target-weight').textContent = appData.user.idealWeight;
-                // For current weight, you'd need a system for user to log it periodically. Placeholder for now.
-                // document.getElementById('prog-current-weight').textContent = "Log weight daily/weekly";
+                
+                const loggedWeightInput = document.getElementById('prog-log-current-weight');
+                const loggedWeightDisplay = document.getElementById('prog-current-weight-display');
+                if(appData.gamification.lastWeightLog) {
+                    if(loggedWeightInput) loggedWeightInput.value = appData.gamification.lastWeightLog.weight;
+                    if(loggedWeightDisplay) loggedWeightDisplay.textContent = `${appData.gamification.lastWeightLog.weight} (on ${new Date(appData.gamification.lastWeightLog.date).toLocaleDateString()})`;
+                } else {
+                     if(loggedWeightInput) loggedWeightInput.value = '';
+                     if(loggedWeightDisplay) loggedWeightDisplay.textContent = 'N/A';
+                }
+
 
                 if(appData.baseline) {
                     document.getElementById('prog-baseline-cardio').textContent = appData.baseline.cardioValue;
+                    document.getElementById('prog-baseline-strength').textContent = appData.baseline.strengthValue;
                 }
-                // For current cardio/mood/stress, you'd need to aggregate from dailyProgress. Simplified for now.
+                // For current cardio/mood/stress, this would need more complex aggregation from dailyProgress.
+                // This is a conceptual display.
+                let totalMood = 0, moodCount = 0, totalStress = 0, stressCount = 0;
+                Object.values(appData.dailyProgress).forEach(dayData => {
+                    if(dayData.peace) {
+                        if(dayData.peace.moodAfter) { totalMood += dayData.peace.moodAfter; moodCount++; }
+                        if(dayData.peace.stressAfter) { totalStress += dayData.peace.stressAfter; stressCount++; }
+                    }
+                });
+                document.getElementById('prog-avg-mood').textContent = moodCount > 0 ? (totalMood/moodCount).toFixed(1) : 'N/A';
+                document.getElementById('prog-avg-stress').textContent = stressCount > 0 ? (totalStress/stressCount).toFixed(1) : 'N/A';
             }
+
+            document.getElementById('save-prog-current-weight')?.addEventListener('click', () => {
+                const newWeight = parseFloat(document.getElementById('prog-log-current-weight').value);
+                if (!isNaN(newWeight) && newWeight > 0) {
+                    appData.gamification.lastWeightLog = { date: new Date().toISOString().split('T')[0], weight: newWeight };
+                    saveAppData();
+                    renderProgressPage(); // Re-render to show saved value
+                    alert("Current weight logged!");
+                } else {
+                    alert("Please enter a valid weight.");
+                }
+            });
 
 
             // --- Gamification ---
@@ -1130,11 +1362,16 @@
             const awardBadge = (badgeName, badgeIconClass) => {
                 if (!appData.gamification.badges.find(b => b.name === badgeName)) {
                     appData.gamification.badges.push({name: badgeName, icon: badgeIconClass, date: new Date().toLocaleDateString() });
-                    // Optional: Show a notification for new badge
                     if (appData.settings.notificationsEnabled && Notification.permission === 'granted') {
-                        new Notification("Badge Unlocked!", { body: `You earned the ${badgeName} badge!`, icon: 'path/to/generic-badge-icon.png' });
+                        new Notification("Badge Unlocked!", { body: `You earned the ${badgeName} badge!`, icon: 'icons/icon-192.png' });
                     } else {
-                        alert(`Badge Unlocked: ${badgeName}!`);
+                        // Simple in-app alert for badge if notifications not available/granted
+                        const badgeAlert = document.createElement('div');
+                        badgeAlert.className = 'notification is-success is-light has-text-centered mt-2';
+                        badgeAlert.innerHTML = `<button class="delete"></button>Badge Unlocked: <strong>${badgeName}</strong>!`;
+                        badgeAlert.querySelector('.delete').addEventListener('click', () => badgeAlert.remove());
+                        document.getElementById('home-page').querySelector('.content-area').prepend(badgeAlert);
+                        setTimeout(() => badgeAlert.remove(), 5000);
                     }
                 }
             };
@@ -1148,31 +1385,75 @@
                     badgesDisplay.innerHTML += `<span class="tag is-medium is-success"><span class="icon is-small mr-1"><i class="${badge.icon}"></i></span>${badge.name}</span>`;
                 });
             };
+            
+            const checkAllDailyTasksCompletion = () => {
+                const todayProgress = getProgressForToday(false); // Don't create if checking
+                if (!todayProgress) return; // No tasks logged for today yet
+
+                const mainTasks = ['sleep', 'weight', 'exercise', 'peace'];
+                const allMainTasksDone = mainTasks.every(taskType => todayProgress[taskType]?.completed);
+                
+                // Also check habit page completion for the day
+                const todayKey = getTodayProgressKey();
+                const habitTaskDone = appData.habitChallenge.log[todayKey]?.completedToday;
+
+                if (allMainTasksDone && habitTaskDone) {
+                    // Increment daily streak
+                    const todayOfYear = getDayOfYear();
+                    // Check if yesterday was also completed for streak continuation (more complex check needed here based on last completed day)
+                    // Simplified: if all tasks are done, and we haven't already incremented streak for today
+                    if (!todayProgress.allDayTasksMarkedDone) { // Add a flag to prevent multiple increments
+                        appData.gamification.dailyStreak++;
+                        addPoints(25); // Bonus for completing all daily tasks
+                        todayProgress.allDayTasksMarkedDone = true; // Mark it
+                        if(appData.gamification.dailyStreak > 0 && appData.gamification.dailyStreak % 7 === 0){
+                            awardBadge(`${appData.gamification.dailyStreak/7} Week Streak!`, 'fas fa-fire');
+                        }
+                    }
+                } else {
+                    // If any task is uncompleted, reset the flag for today (streak logic needs more thought for robustness)
+                    if (todayProgress.allDayTasksMarkedDone) {
+                         // appData.gamification.dailyStreak--; // Or handle streak breaking differently
+                    }
+                    todayProgress.allDayTasksMarkedDone = false;
+                }
+
+                // Check for weekly completion badge
+                const { week, day } = calculateCurrentChallengeDay();
+                if (day === DAYS_IN_WEEK && allMainTasksDone && habitTaskDone) { // If it's the last day of the week and all tasks done
+                    checkAndAwardWeeklyBadges(week);
+                }
+                saveAppData();
+            };
+
             const checkAndAwardWeeklyBadges = (weekCompleted) => {
                 awardBadge(`Week ${weekCompleted} Complete!`, 'fas fa-trophy');
                 if (weekCompleted === 1) awardBadge('First Week Finisher', 'fas fa-star');
-                if (weekCompleted === 5) awardBadge('Halfway Hero', 'fas fa-medal');
+                if (weekCompleted === Math.floor(TOTAL_WEEKS / 2)) awardBadge('Halfway Hero', 'fas fa-medal');
                 if (weekCompleted === TOTAL_WEEKS) awardBadge('Transformation Champion!', 'fas fa-crown');
+                addPoints(50 * weekCompleted); // Bonus points for week completion
             };
 
 
             // --- LLM Simulation ---
             const getLLMSimulatedResponse = (type, input, context = null) => {
-                // Simulate network delay
                 return new Promise(resolve => {
                     setTimeout(() => {
                         let response = "I'm a simulated assistant. How can I help with that topic today?";
                         if (type === 'motivation') {
                             const task = input.task;
-                            response = `Feeling unmotivated about ${task}? Remember why you started! Every small step counts. You've made progress like [simulated progress nugget, e.g., consistent sleep for 3 days]. Keep pushing, you're doing great!`;
-                            if (task === 'exercise' && context?.exerciseStreak > 2) response += ` Your ${context.exerciseStreak}-day exercise streak is awesome!`;
+                            response = `Feeling unmotivated about ${task}? Remember why you started this journey, ${appData.user.name}! You wanted to achieve [your transformation goal]. Every small step is progress.`;
+                            if (appData.gamification.dailyStreak > 1) response += ` You're on a ${appData.gamification.dailyStreak}-day streak, that's fantastic!`;
+                            else if (context?.points > 50) response += ` You've already earned ${context.points} points, keep it up!`;
+                            else response += ` Just taking this step to seek motivation is a win!`;
+                            response += ` Focus on the very next action for ${task}. You can do it!`;
                         } else if (type === 'stressChat') {
                             if (input.toLowerCase().includes('exam') || input.toLowerCase().includes('test')) response = "Exams can be tough. Remember to break down your study, take breaks, and get enough sleep. You've got this!";
                             else if (input.toLowerCase().includes('work')) response = "Work stress is common. Can you identify one small thing to delegate or de-prioritize? Taking a short walk can also help clear your head.";
-                            else response = `I hear you about ${input}. Sometimes just naming the stressor is the first step. What's one tiny action you could take related to it?`;
+                            else response = `I hear you about "${input}". It's valid to feel that way. Sometimes just naming the stressor is the first step. What's one tiny action you could take related to it, or a healthy way to distract yourself for a few minutes?`;
                         }
                         resolve(response);
-                    }, 800);
+                    }, 700);
                 });
             };
 
@@ -1182,20 +1463,18 @@
                 document.getElementById('motivation-llm-response-area').style.display = 'block';
                 document.getElementById('motivation-llm-text').textContent = "Thinking of some encouragement...";
                 
-                // Prepare some context for LLM
-                const exerciseCompletions = Object.values(appData.dailyProgress).filter(d => d.exercise?.completed).length;
-                const context = { exerciseStreak: exerciseCompletions /* simplified streak */ };
+                const context = { points: appData.gamification.points };
 
                 const response = await getLLMSimulatedResponse('motivation', {task: selectedTask}, context);
                 document.getElementById('motivation-llm-text').textContent = response;
             });
 
             // LLM Chat for Peace of Mind
-            let peaceChatHistory = []; // Store {user: msg, bot: msg}
+            let peaceChatHistory = []; 
             const llmChatHistoryPeaceDiv = document.getElementById('llm-chat-history-peace');
             const llmChatInputPeace = document.getElementById('llm-chat-input-peace');
 
-            const renderLlmChatHistory = (contextType) => { // contextType: 'peace' or future ones
+            const renderLlmChatHistory = (contextType) => { 
                 const historyDiv = (contextType === 'peace') ? llmChatHistoryPeaceDiv : null;
                 const historyArr = (contextType === 'peace') ? peaceChatHistory : [];
                 if(!historyDiv) return;
@@ -1221,15 +1500,16 @@
                 renderLlmChatHistory('peace');
                 llmChatInputPeace.disabled = false;
                 llmChatInputPeace.focus();
-                // Persist chat history if needed in appData.dailyProgress[todayKey].peace.llmChat
-                getProgressForToday().peace.llmChat = peaceChatHistory.slice(-5); // Keep last 5 exchanges
+                
+                const todayPeaceData = getProgressForToday().peace;
+                todayPeaceData.llmChat = peaceChatHistory.slice(-6); // Keep last 3 exchanges (6 messages)
                 saveAppData();
             });
 
 
             // --- App Initialization & Daily Logic ---
             const initializeAppDashboard = () => {
-                if (!appData.user) { // Should not happen if registration is forced
+                if (!appData.user) { 
                     showPage('registration-page');
                     return;
                 }
@@ -1237,55 +1517,52 @@
                 showPage('home-page');
                 
                 const { week, day, overallDay } = calculateCurrentChallengeDay();
-                appData.user.currentWeek = week;
-                // appData.user.currentDay = day; // Not needed if using overallDay for progress
+                appData.user.currentWeek = week; // Store for easier access elsewhere if needed
 
-                // Handle missed days & streaks
                 const todayOfYear = getDayOfYear();
+                const welcomeMsgDiv = document.getElementById('welcome-back-message');
                 if (appData.user.lastLoginDayOfYear) {
                     if (todayOfYear === appData.user.lastLoginDayOfYear) {
-                        // Same day login, no change to streak
+                        // Same day login
+                        welcomeMsgDiv.style.display = 'none';
                     } else if (todayOfYear === appData.user.lastLoginDayOfYear + 1) {
-                        // Consecutive day, streak continues (handled by task completion)
-                    } else { // Missed day(s)
-                        appData.gamification.dailyStreak = 0; // Reset streak
-                        document.getElementById('welcome-back-message').textContent = `Welcome back, ${appData.user.name}! It's okay to miss days. Let's get back on track. You're on Week ${week}, Day ${day}.`;
-                        document.getElementById('welcome-back-message').style.display = 'block';
+                        // Consecutive day
+                         welcomeMsgDiv.style.display = 'none'; // Or a "keep it up!" message
+                    } else { 
+                        appData.gamification.dailyStreak = 0; 
+                        welcomeMsgDiv.textContent = `Welcome back, ${appData.user.name}! It's okay to miss days. Let's get back on track. You're on Week ${week}, Day ${day}.`;
+                        welcomeMsgDiv.style.display = 'block';
                     }
                 }
                 appData.user.lastLoginDayOfYear = todayOfYear;
 
 
-                // Update overall progress bar
                 document.getElementById('challenge-progress-text').textContent = `Week ${week} of ${TOTAL_WEEKS} (Day ${overallDay} of ${TOTAL_DAYS})`;
                 document.getElementById('challenge-progress-bar').value = overallDay;
                 document.getElementById('challenge-progress-bar').max = TOTAL_DAYS;
 
-                // User info on dashboard
                 const userInfoDiv = document.getElementById('user-info-dashboard');
                 userInfoDiv.innerHTML = `
                     <p><strong>Name:</strong> ${appData.user.name}</p>
                     <p><strong>Age:</strong> ${appData.user.age}, <strong>Gender:</strong> ${appData.user.gender}</p>
-                    <p><strong>Exercise Track:</strong> ${appData.user.exerciseTrack}</p>
-                    <p><strong>Ideal Weight Target:</strong> ${appData.user.idealWeight} kg (Deficit: ${appData.user.caloricDeficit} kcal)</p>
+                    <p><strong>Exercise Track:</strong> ${appData.user.exerciseTrack ? appData.user.exerciseTrack.charAt(0).toUpperCase() + appData.user.exerciseTrack.slice(1) : 'N/A'}</p>
+                    <p><strong>Ideal Weight:</strong> ${appData.user.idealWeight} kg (Current BMR: ~${appData.user.bmr} kcal, Target Deficit: ${appData.user.caloricDeficit} kcal)</p>
                 `;
 
                 updateGamificationDisplay();
-                renderDailyTasks(); // This will also call setupCardEventListeners
+                renderDailyTasks(); 
 
-                // Check if all tasks for yesterday were done to increment streak (simplified)
-                // A more robust streak would check if *all* tasks from getProgressForToday() are done at end of day
-                // For simplicity, if they login and do tasks, it counts.
-                // Actual streak increment should happen when all daily tasks are marked completed.
+                const todayProgressExists = getProgressForToday(false); // Check if today's progress entry exists
+                const allTasksDoneToday = todayProgressExists ? Object.values(todayProgressExists).every(task => typeof task === 'object' ? task.completed : true) && appData.habitChallenge.log[getTodayProgressKey()]?.completedToday : false;
 
-                // Daily reminder
-                const todayProgress = getProgressForToday();
-                const allTasksDoneToday = Object.values(todayProgress).every(task => typeof task === 'object' ? task.completed : true);
-                if (!allTasksDoneToday && appData.settings.notificationsEnabled && Notification.permission === 'granted') {
-                    new Notification("Daily Tasks Reminder", { body: "Don't forget to complete your tasks for today!", icon: 'path/to/reminder-icon.png' });
-                } else if (!allTasksDoneToday) {
-                    document.getElementById('daily-task-reminder').style.display = 'block';
+                const dailyReminderDiv = document.getElementById('daily-task-reminder');
+                if (!allTasksDoneToday) {
+                    dailyReminderDiv.style.display = 'block';
+                    showDailyReminderNotification(); // Attempt to show browser notification
+                } else {
+                    dailyReminderDiv.style.display = 'none';
                 }
+                saveAppData(); // Save updated lastLoginDayOfYear and streak
             };
 
 
@@ -1293,33 +1570,48 @@
             document.getElementById('reset-app-data')?.addEventListener('click', () => {
                 if (confirm("Are you sure you want to reset ALL app data? This cannot be undone.")) {
                     localStorage.removeItem('transformationAppData');
-                    appData = { user: null, baseline: null, dailyProgress: {}, weeklyGratitude: {}, gamification: { points: 0, badges: [], dailyStreak: 0 }, settings: { notificationsEnabled: false, theme: 'dark' }, habitChallenge: {behaviorName: "My Unwanted Habit", log: {}, trigger: null, substitution: null} }; // Reset in-memory state
-                    // Reload or redirect to splash/registration
+                    // Reset in-memory state to defaults
+                    appData = { user: null, baseline: null, dailyProgress: {}, weeklyGratitude: {}, gamification: { points: 0, badges: [], dailyStreak: 0, lastWeightLog: null }, settings: { notificationsEnabled: false, theme: 'dark' }, habitChallenge: {behaviorName: "My Unwanted Habit", log: {}, trigger: null, substitution: null} };
                     location.reload(); 
                 }
             });
-            document.getElementById('community-forum-link')?.addEventListener('click', () => alert("Community forum link (placeholder) - would open an external link."));
+            document.getElementById('community-forum-link')?.addEventListener('click', () => {
+                // In a real app, this would open a link. For this PWA, it's a placeholder.
+                alert("Community Forum (Conceptual Link)\n\nThis would typically open an external link to a forum or social group for the 10 Week Transformation challenge users to connect and share experiences.");
+            });
 
 
             // --- App Start ---
             loadAppData();
-            applyTheme(appData.settings.theme === 'light'); // Apply saved or default theme
-             if (themeToggleCheckbox) { // Ensure it's setup after load
+            applyTheme(appData.settings.theme === 'light'); 
+             if (themeToggleCheckbox) { 
                 themeToggleCheckbox.addEventListener('change', () => applyTheme(themeToggleCheckbox.checked));
             }
             document.getElementById('notifications-enabled-switch').checked = appData.settings.notificationsEnabled;
 
 
-            if (!appData.user) {
-                setTimeout(() => showPage('registration-page'), 2600); // After splash
-            } else if (!appData.baseline) {
-                setTimeout(() => showPage('questionnaire-page'), 2600);
-            } else if (!appData.user.exerciseTrack) {
-                setTimeout(() => showPage('exercise-track-selection-page'), 2600);
-            } else {
-                setTimeout(initializeAppDashboard, 2600);
-            }
+            // Splash screen logic
+            const splashTimeout = (appData.user && appData.user.registrationDate) ? 1500 : 2600; // Shorter splash if returning user
+            setTimeout(() => {
+                const splash = document.getElementById('splash-page');
+                if (splash) splash.style.opacity = '0'; // Start fade
+                setTimeout(() => { // After fade, remove from display and decide next page
+                     if (splash) splash.style.display = 'none';
+                     if (!appData.user) {
+                        showPage('registration-page');
+                    } else if (!appData.baseline) {
+                        showPage('questionnaire-page');
+                    } else if (!appData.user.exerciseTrack) {
+                        showPage('exercise-track-selection-page');
+                    } else {
+                        initializeAppDashboard();
+                    }
+                }, 500); // Match animation duration for display none
+            }, splashTimeout - 500); // Start fade a bit earlier than full splash duration
+
         });
     </script>
 </body>
 </html>
+
+226.3s

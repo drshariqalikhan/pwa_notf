@@ -2,8 +2,8 @@ const CACHE_NAME = 'bare-bones-pwa-cache-v1';
 const urlsToCache = [
     '/',
     'index.html',
-    'style.css',
-    'script.js',
+    // 'style.css',
+    // 'script.js',
     'manifest.json',
     'icons/icon-192x192.png',
     'icons/icon-512x512.png',
