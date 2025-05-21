@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Bare Bones PWA (Inlined)</title>
+
+    <!-- PWA & iOS Specific Meta Tags -->
+    <link rel="manifest" href="manifest.json"> <!-- MUST BE EXTERNAL -->
+    <meta name="theme-color" content="#333333">
+
+    <!-- iOS Specific -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PWA iOS">
+
+    <!-- Apple Touch Icons (use actual icon paths) -->
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon.png">
+
+    <!-- Apple Startup Images (Splash Screens) - MUST BE EXTERNAL IMAGES -->
+    <!-- <link rel="apple-touch-startup-image" href="icons/splash-iphone-se.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"> -->
+
+    <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --text-color: #333;
+            --primary-color: #007aff; /* Apple blue */
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1c1c1e;
+                --text-color: #f2f2f7;
+                --primary-color: #0a84ff;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-top: constant(safe-area-inset-top);
+            padding-right: constant(safe-area-inset-right);
+            padding-bottom: constant(safe-area-inset-bottom);
+            padding-left: constant(safe-area-inset-left);
+            padding-top: env(safe-area-inset-top);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+        }
+
+        h1 {
+            color: var(--primary-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #logContainer {
+            margin-top: 20px;
+            border: 1px solid var(--text-color);
+            padding: 10px;
+            background-color: var(--bg-color);
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 5px;
+        }
+
+        #logs {
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <h1>My Bare Bones PWA</h1>
+    <p>Add this to your Home Screen!</p>
+
+    <button id="requestPermissionBtn">Request Camera Permission</button>
+    <button id="triggerErrorBtn">Trigger JS Error</button>
+    <button id="clearLogsBtn">Clear Logs</button>
+
+    <h2>Logs:</h2>
+    <div id="logContainer">
+        <pre id="logs"></pre>
+    </div>
+
+    <script>
+        // --- Start of Inlined JavaScript ---
+        const logsElement = document.getElementById('logs');
+        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+        const triggerErrorBtn = document.getElementById('triggerErrorBtn');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+
+        let appLogs = [];
+
+        // --- Logging System ---
+        function logEvent(message, type = 'INFO') {
+            const timestamp = new Date().toISOString();
+            const logEntry = `[${timestamp}] [${type}] ${message}`;
+            console.log(logEntry); // Also log to browser console
+
+            appLogs.push(logEntry);
+            if (appLogs.length > 100) { // Keep logs from growing too large
+                appLogs.shift();
+            }
+            renderLogs();
+            saveLogs();
+        }
+
+        function renderLogs() {
+            if (logsElement) {
+                logsElement.textContent = appLogs.join('\n');
+                if (logsElement.parentElement) {
+                  logsElement.parentElement.scrollTop = logsElement.parentElement.scrollHeight;
+                }
+            }
+        }
+
+        function saveLogs() {
+            try {
+                localStorage.setItem('appLogs', JSON.stringify(appLogs));
+            } catch (e) {
+                console.warn('Could not save logs to localStorage:', e);
+            }
+        }
+
+        function loadLogs() {
+            try {
+                const storedLogs = localStorage.getItem('appLogs');
+                if (storedLogs) {
+                    appLogs = JSON.parse(storedLogs);
+                }
+            } catch (e) {
+                console.warn('Could not load logs from localStorage:', e);
+                appLogs = []; // Reset if corrupted
+            }
+        }
+
+        // --- Global Error Handling ---
+        window.onerror = function(message, source, lineno, colno, error) {
+            logEvent(`Unhandled Error: ${message} at ${source}:${lineno}:${colno}`, 'ERROR');
+            if (error && error.stack) {
+                logEvent(`Stack: ${error.stack}`, 'ERROR_STACK');
+            }
+            return false;
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+            logEvent(`Unhandled Promise Rejection: ${event.reason}`, 'ERROR');
+            if (event.reason && event.reason.stack) {
+                logEvent(`Stack: ${event.reason.stack}`, 'ERROR_STACK');
+            }
+        });
+
+        // --- Service Worker Registration ---
+        // The 'sw.js' file MUST BE EXTERNAL
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js') // Path to your external sw.js
+                    .then(registration => {
+                        logEvent('ServiceWorker registration successful with scope: ' + registration.scope, 'SW');
+                    })
+                    .catch(error => {
+                        logEvent('ServiceWorker registration failed: ' + error, 'SW_ERROR');
+                    });
+            });
+        } else {
+            logEvent('ServiceWorker not supported in this browser.', 'APP_WARNING');
+        }
+
+        // --- Permissions Example ---
+        if (requestPermissionBtn) {
+            requestPermissionBtn.addEventListener('click', () => {
+                logEvent('Attempting to request camera permission.', 'PERMISSION');
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            logEvent('Camera permission granted.', 'PERMISSION');
+                            stream.getTracks().forEach(track => track.stop());
+                        })
+                        .catch(err => {
+                            logEvent(`Camera permission denied or error: ${err.name} - ${err.message}`, 'PERMISSION_ERROR');
+                        });
+                } else {
+                    logEvent('getUserMedia not supported on this browser/device.', 'PERMISSION_ERROR');
+                }
+            });
+        }
+
+        // --- Trigger Error Example ---
+        if (triggerErrorBtn) {
+            triggerErrorBtn.addEventListener('click', () => {
+                logEvent('Triggering a test error.', 'TEST');
+                try {
+                    const a = undefined;
+                    console.log(a.b.c);
+                } catch (e) {
+                    logEvent(`Caught test error locally: ${e.message}`, 'ERROR');
+                }
+            });
+        }
+
+        // --- Clear Logs ---
+        if (clearLogsBtn) {
+            clearLogsBtn.addEventListener('click', () => {
+                appLogs = [];
+                renderLogs();
+                saveLogs();
+                logEvent('Logs cleared.', 'SYSTEM');
+            });
+        }
+
+        // --- App Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLogs(); // Load logs first
+            renderLogs(); // Then render them
+            logEvent('App Initialized.', 'APP_LIFECYCLE');
+
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                logEvent('App is running in standalone (PWA) mode.', 'PWA_MODE');
+            } else {
+                logEvent('App is running in browser tab.', 'BROWSER_MODE');
+            }
+
+            if (window.matchMedia) {
+                const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                logEvent(`Initial color scheme: ${darkModeMediaQuery.matches ? 'dark' : 'light'}`, 'SYSTEM');
+                darkModeMediaQuery.addEventListener('change', (e) => {
+                    const newColorScheme = e.matches ? "dark" : "light";
+                    logEvent(`Color scheme changed to: ${newColorScheme}`, 'SYSTEM');
+                });
+            }
+        });
+        // --- End of Inlined JavaScript ---
+    </script>
+</body>
+</html>
