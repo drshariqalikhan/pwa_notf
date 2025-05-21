@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Bare Bones PWA (Inlined)</title>
+    <title>Bare Bones PWA (Notifications)</title>
 
     <!-- PWA & iOS Specific Meta Tags -->
     <link rel="manifest" href="manifest.json"> <!-- MUST BE EXTERNAL -->
@@ -55,7 +55,7 @@
             padding-left: env(safe-area-inset-left);
         }
 
-        h1 {
+        h1, h2, h3 {
             color: var(--primary-color);
         }
 
@@ -72,6 +72,14 @@
 
         button:hover {
             opacity: 0.9;
+        }
+        button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            margin-bottom: 15px;
         }
 
         #logContainer {
@@ -94,10 +102,30 @@
     </style>
 </head>
 <body>
-    <h1>My Bare Bones PWA</h1>
-    <p>Add this to your Home Screen!</p>
+    <h1>My PWA Notifications Demo</h1>
+    <p>Add to Home Screen to test all features (iOS 16.4+ for Push/Badge).</p>
 
-    <button id="requestPermissionBtn">Request Camera Permission</button>
+    <div class="button-group">
+        <h3>Basic Alert</h3>
+        <button id="showAlertBtn">Show JS Alert</button>
+    </div>
+
+    <div class="button-group">
+        <h3>Banner/Push Notification (Local)</h3>
+        <p><small>Requires user permission. On iOS 16.4+, shows as system notification if PWA is on Home Screen.</small></p>
+        <button id="requestPushPermBtn">1. Request Push Permission</button>
+        <button id="showBannerBtn" disabled>2. Show Banner Notification</button>
+    </div>
+
+    <div class="button-group">
+        <h3>App Icon Badge</h3>
+        <p><small>On iOS 16.4+, PWA must be on Home Screen.</small></p>
+        <button id="setAppBadgeBtn">Set Badge (e.g., 5)</button>
+        <button id="clearAppBadgeBtn">Clear Badge</button>
+    </div>
+
+    <hr>
+
     <button id="triggerErrorBtn">Trigger JS Error</button>
     <button id="clearLogsBtn">Clear Logs</button>
 
@@ -109,9 +137,16 @@
     <script>
         // --- Start of Inlined JavaScript ---
         const logsElement = document.getElementById('logs');
-        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+        const requestPermissionBtn = document.getElementById('requestPermissionBtn'); // Old camera perm btn
         const triggerErrorBtn = document.getElementById('triggerErrorBtn');
         const clearLogsBtn = document.getElementById('clearLogsBtn');
+
+        // New Notification Buttons
+        const showAlertBtn = document.getElementById('showAlertBtn');
+        const requestPushPermBtn = document.getElementById('requestPushPermBtn');
+        const showBannerBtn = document.getElementById('showBannerBtn');
+        const setAppBadgeBtn = document.getElementById('setAppBadgeBtn');
+        const clearAppBadgeBtn = document.getElementById('clearAppBadgeBtn');
 
         let appLogs = [];
 
@@ -119,10 +154,10 @@
         function logEvent(message, type = 'INFO') {
             const timestamp = new Date().toISOString();
             const logEntry = `[${timestamp}] [${type}] ${message}`;
-            console.log(logEntry); // Also log to browser console
+            console.log(logEntry);
 
             appLogs.push(logEntry);
-            if (appLogs.length > 100) { // Keep logs from growing too large
+            if (appLogs.length > 200) {
                 appLogs.shift();
             }
             renderLogs();
@@ -154,7 +189,7 @@
                 }
             } catch (e) {
                 console.warn('Could not load logs from localStorage:', e);
-                appLogs = []; // Reset if corrupted
+                appLogs = [];
             }
         }
 
@@ -175,39 +210,184 @@
         });
 
         // --- Service Worker Registration ---
-        // The 'sw.js' file MUST BE EXTERNAL
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js') // Path to your external sw.js
+                navigator.serviceWorker.register('sw.js')
                     .then(registration => {
-                        logEvent('ServiceWorker registration successful with scope: ' + registration.scope, 'SW');
+                        logEvent('ServiceWorker registration successful', 'SW');
+                        // For true push, you'd use registration.pushManager here
                     })
                     .catch(error => {
                         logEvent('ServiceWorker registration failed: ' + error, 'SW_ERROR');
                     });
             });
         } else {
-            logEvent('ServiceWorker not supported in this browser.', 'APP_WARNING');
+            logEvent('ServiceWorker not supported.', 'APP_WARNING');
         }
 
-        // --- Permissions Example ---
-        if (requestPermissionBtn) {
-            requestPermissionBtn.addEventListener('click', () => {
-                logEvent('Attempting to request camera permission.', 'PERMISSION');
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    navigator.mediaDevices.getUserMedia({ video: true })
-                        .then(stream => {
-                            logEvent('Camera permission granted.', 'PERMISSION');
-                            stream.getTracks().forEach(track => track.stop());
-                        })
-                        .catch(err => {
-                            logEvent(`Camera permission denied or error: ${err.name} - ${err.message}`, 'PERMISSION_ERROR');
-                        });
-                } else {
-                    logEvent('getUserMedia not supported on this browser/device.', 'PERMISSION_ERROR');
+        // --- Notification Features ---
+
+        // 1. JS Alert
+        if (showAlertBtn) {
+            showAlertBtn.addEventListener('click', () => {
+                logEvent('Showing JS alert.', 'NOTIFICATION');
+                alert("This is a standard JavaScript alert!");
+                logEvent('JS alert dismissed.', 'NOTIFICATION');
+            });
+        }
+
+        // 2. Banner / Push Notification (Local)
+        function checkNotificationPermission(doLog = true) {
+            if (!('Notification' in window)) {
+                if (doLog) logEvent('Notification API not supported.', 'NOTIF_ERROR');
+                showBannerBtn.disabled = true;
+                requestPushPermBtn.disabled = true;
+                return false;
+            }
+            if (Notification.permission === 'granted') {
+                if (doLog) logEvent('Notification permission already granted.', 'NOTIF_PERM');
+                showBannerBtn.disabled = false;
+                requestPushPermBtn.textContent = 'Permission Granted';
+                requestPushPermBtn.disabled = true;
+            } else if (Notification.permission === 'denied') {
+                if (doLog) logEvent('Notification permission denied.', 'NOTIF_PERM');
+                showBannerBtn.disabled = true;
+                requestPushPermBtn.textContent = 'Permission Denied';
+                requestPushPermBtn.disabled = true;
+            } else {
+                 if (doLog) logEvent('Notification permission default (not yet requested or dismissed).', 'NOTIF_PERM');
+                showBannerBtn.disabled = true; // Enable only after permission
+                requestPushPermBtn.disabled = false;
+            }
+            return true;
+        }
+
+        if (requestPushPermBtn) {
+            requestPushPermBtn.addEventListener('click', () => {
+                if (!('Notification' in window)) {
+                    logEvent('Notification API not supported.', 'NOTIF_ERROR');
+                    alert('Sorry, Notifications are not supported in your browser.');
+                    return;
+                }
+                logEvent('Requesting notification permission...', 'NOTIF_PERM');
+                Notification.requestPermission().then(permission => {
+                    logEvent(`Notification permission status: ${permission}`, 'NOTIF_PERM');
+                    checkNotificationPermission(false); // Update button states without re-logging initial status
+                    if (permission === 'granted') {
+                        logEvent('You can now show banner notifications.', 'NOTIF_PERM');
+                    } else {
+                        logEvent('Banner notifications cannot be shown without permission.', 'NOTIF_PERM');
+                    }
+                });
+            });
+        }
+
+        if (showBannerBtn) {
+            showBannerBtn.addEventListener('click', () => {
+                if (!('Notification' in window) || Notification.permission !== 'granted') {
+                    logEvent('Cannot show banner: No permission or API not supported.', 'NOTIF_ERROR');
+                    alert('Please grant notification permission first.');
+                    return;
+                }
+                logEvent('Showing banner notification...', 'NOTIFICATION');
+                const notifTitle = "PWA Test Notification";
+                const notifBody = `Hello from your PWA! Time: ${new Date().toLocaleTimeString()}`;
+                const notifIcon = 'icons/icon-192x192.png'; // Should be accessible URL
+                const options = {
+                    body: notifBody,
+                    icon: notifIcon,
+                    badge: 'icons/apple-touch-icon.png', // Badge for notification itself (Android mostly)
+                    // Vibrate is not consistently supported on iOS for web notifications
+                    // vibrate: [200, 100, 200],
+                    tag: 'pwa-test-notification', // Replaces existing notification with same tag
+                    renotify: true, // Notifies even if a notification with the same tag exists
+                };
+                try {
+                    // Check if service worker is ready, for more robust notifications
+                    // but for local client-side, this is fine.
+                    // navigator.serviceWorker.ready.then(registration => {
+                    //     registration.showNotification(notifTitle, options);
+                    // });
+                    // Direct notification from page:
+                    const notification = new Notification(notifTitle, options);
+                    notification.onclick = () => {
+                        logEvent('Banner notification clicked.', 'NOTIFICATION_EVENT');
+                        window.focus(); // Try to bring PWA to foreground
+                        // You could also navigate:
+                        // clients.openWindow('/some-specific-page'); (from SW)
+                        // window.location.href = '/'; (from page)
+                    };
+                    notification.onclose = () => {
+                        logEvent('Banner notification closed.', 'NOTIFICATION_EVENT');
+                    };
+                    notification.onerror = (err) => {
+                        logEvent(`Banner notification error: ${err}`, 'NOTIF_ERROR');
+                    };
+
+                } catch (err) {
+                    logEvent(`Error creating notification: ${err}`, 'NOTIF_ERROR');
                 }
             });
         }
+
+        // 3. App Icon Badge
+        function checkBadgeSupport() {
+            if (!('setAppBadge' in navigator && 'clearAppBadge' in navigator)) {
+                logEvent('App Badging API not supported.', 'BADGE_ERROR');
+                if(setAppBadgeBtn) setAppBadgeBtn.disabled = true;
+                if(clearAppBadgeBtn) clearAppBadgeBtn.disabled = true;
+                return false;
+            }
+            logEvent('App Badging API is supported.', 'BADGE_INFO');
+            if(setAppBadgeBtn) setAppBadgeBtn.disabled = false;
+            if(clearAppBadgeBtn) clearAppBadgeBtn.disabled = false;
+            return true;
+        }
+
+        if (setAppBadgeBtn) {
+            setAppBadgeBtn.addEventListener('click', async () => {
+                if (!('setAppBadge' in navigator)) {
+                    logEvent('setAppBadge not supported.', 'BADGE_ERROR');
+                    alert('App badging is not supported in your browser/PWA mode.');
+                    return;
+                }
+                const badgeCount = parseInt(prompt("Enter badge number (e.g., 5):", "5"));
+                if (!isNaN(badgeCount) && badgeCount > 0) {
+                    try {
+                        await navigator.setAppBadge(badgeCount);
+                        logEvent(`App badge set to ${badgeCount}.`, 'BADGE_ACTION');
+                    } catch (error) {
+                        logEvent(`Error setting app badge: ${error}`, 'BADGE_ERROR');
+                    }
+                } else if (badgeCount === 0) {
+                     try {
+                        await navigator.clearAppBadge();
+                        logEvent('App badge cleared (by setting to 0).', 'BADGE_ACTION');
+                    } catch (error) {
+                        logEvent(`Error clearing app badge: ${error}`, 'BADGE_ERROR');
+                    }
+                } else {
+                    logEvent('Invalid badge number entered.', 'BADGE_INPUT_ERROR');
+                }
+            });
+        }
+
+        if (clearAppBadgeBtn) {
+            clearAppBadgeBtn.addEventListener('click', async () => {
+                if (!('clearAppBadge' in navigator)) {
+                    logEvent('clearAppBadge not supported.', 'BADGE_ERROR');
+                    alert('App badging is not supported in your browser/PWA mode.');
+                    return;
+                }
+                try {
+                    await navigator.clearAppBadge();
+                    logEvent('App badge cleared.', 'BADGE_ACTION');
+                } catch (error) {
+                    logEvent(`Error clearing app badge: ${error}`, 'BADGE_ERROR');
+                }
+            });
+        }
+
 
         // --- Trigger Error Example ---
         if (triggerErrorBtn) {
@@ -234,14 +414,14 @@
 
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadLogs(); // Load logs first
-            renderLogs(); // Then render them
-            logEvent('App Initialized.', 'APP_LIFECYCLE');
+            loadLogs();
+            renderLogs();
+            logEvent('App Initialized. iOS 16.4+ & Home Screen for Push/Badge.', 'APP_LIFECYCLE');
 
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
                 logEvent('App is running in standalone (PWA) mode.', 'PWA_MODE');
             } else {
-                logEvent('App is running in browser tab.', 'BROWSER_MODE');
+                logEvent('App is running in browser tab. Some features like badging or full push appearance might be limited.', 'BROWSER_MODE');
             }
 
             if (window.matchMedia) {
@@ -252,6 +432,10 @@
                     logEvent(`Color scheme changed to: ${newColorScheme}`, 'SYSTEM');
                 });
             }
+
+            // Initial checks for feature support
+            checkNotificationPermission();
+            checkBadgeSupport();
         });
         // --- End of Inlined JavaScript ---
     </script>
