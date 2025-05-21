@@ -90,38 +90,40 @@
         /* Card Collection */
         .card-collection-container {
             position: relative;
+            margin-top: 0.5rem; /* Added some top margin now that button is gone */
         }
         .card-collection {
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
-            padding-bottom: 1rem; /* For scrollbar and space for shadow */
+            padding-bottom: 1rem; 
             -webkit-overflow-scrolling: touch;
-            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
-            transform: translateX(0);
-            opacity: 1;
+            /* Removed transition for transform/opacity related to hide button */
+            /* transform: translateX(0); */
+            /* opacity: 1; */
         }
-        .card-collection.is-hidden-left {
+        /* .card-collection.is-hidden-left css can be removed or kept if needed for other features */
+        /* .card-collection.is-hidden-left {
             transform: translateX(-110%);
             opacity: 0;
             pointer-events: none;
-        }
+        } */
 
         .card-collection .card {
             flex: 0 0 auto;
             width: 80vw;
             max-width: 300px;
             margin-right: 1rem;
-            margin-bottom: 1rem; /* Space for shadow and visual separation */
+            margin-bottom: 1rem; 
             scroll-snap-align: start;
             background-color: #333;
             color: #e0e0e0;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             transition: transform 0.3s ease-out, background-color 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            position: relative; /* For potential absolute positioned elements inside */
+            position: relative;
         }
-        .card-collection .card:hover:not(.is-task-done) { /* Only hover effect if not 'done' */
+        .card-collection .card:hover:not(.is-task-done) {
             transform: translateY(-5px);
         }
         .card-collection .card .card-content {
@@ -133,21 +135,19 @@
         
         /* Task Done Styles */
         .card.is-task-done {
-            background-color: #2a523d; /* Darker green, indicating completion */
+            background-color: #2a523d; 
             opacity: 0.85;
-            /* Add a border or other visual cue */
-            border-left: 5px solid #48c774; /* Bulma success color */
+            border-left: 5px solid #48c774; 
         }
         html.is-light-mode .card.is-task-done {
-            background-color: #e6ffed; /* Light green for light mode */
+            background-color: #e6ffed; 
             opacity: 0.9;
-            border-left: 5px solid #23d160; /* Bulma success color for light mode */
+            border-left: 5px solid #23d160; 
         }
         .card.is-task-done .title,
         .card.is-task-done .subtitle,
         .card.is-task-done p {
-            /* text-decoration: line-through; */ /* Optional: strikethrough content */
-            color: #c0c0c0; /* Muted text color */
+            color: #c0c0c0; 
         }
         html.is-light-mode .card.is-task-done .title,
         html.is-light-mode .card.is-task-done .subtitle,
@@ -156,7 +156,7 @@
         }
         .card.is-task-done .task-done-checkbox-label,
         .card.is-task-done .task-done-checkbox-label .icon {
-            color: #fff !important; /* Ensure checkbox text is visible */
+            color: #fff !important; 
         }
         html.is-light-mode .card.is-task-done .task-done-checkbox-label,
         html.is-light-mode .card.is-task-done .task-done-checkbox-label .icon {
@@ -196,16 +196,9 @@
             padding-top: 0 !important;
             padding-bottom: 0 !important;
             margin-bottom: 0 !important;
-            margin-right: 0 !important; /* To allow next card to slide in smoothly */
+            margin-right: 0 !important; 
             overflow: hidden;
             pointer-events: none;
-        }
-
-
-        /* Toggle Cards Button */
-        .toggle-cards-button {
-            margin-bottom: 0.5rem;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         /* Nav Bar (Bottom) */
@@ -379,10 +372,7 @@
         </header>
         <main class="content-area">
             <div class="card-collection-container">
-                <button id="toggle-cards-button" class="button is-small is-light toggle-cards-button">
-                    <span class="icon"><i class="fas fa-arrow-left"></i></span>
-                    <span>Hide Cards</span>
-                </button>
+                <!-- "Hide/Show Cards" button removed -->
                 <div class="card-collection" id="home-card-collection">
                     <div class="card">
                         <div class="card-content">
@@ -643,8 +633,7 @@
             const darkIcon = document.querySelector('.theme-toggle-icon-container .dark-icon');
             const lightIcon = document.querySelector('.theme-toggle-icon-container .light-icon');
 
-            const toggleCardsButton = document.getElementById('toggle-cards-button');
-            const homeCardCollection = document.getElementById('home-card-collection');
+            // const homeCardCollection = document.getElementById('home-card-collection'); // No longer needed for hide/show button
 
             function showPage(pageId) {
                 pages.forEach(page => page.classList.remove('is-active'));
@@ -693,16 +682,8 @@
                 });
             }
 
-            if (toggleCardsButton && homeCardCollection) {
-                let cardsHidden = false;
-                toggleCardsButton.addEventListener('click', () => {
-                    cardsHidden = !cardsHidden;
-                    homeCardCollection.classList.toggle('is-hidden-left', cardsHidden);
-                    toggleCardsButton.innerHTML = cardsHidden ? 
-                        '<span class="icon"><i class="fas fa-arrow-right"></i></span> <span>Show Cards</span>' :
-                        '<span class="icon"><i class="fas fa-arrow-left"></i></span> <span>Hide Cards</span>';
-                });
-            }
+            // Remove "Hide/Show Cards" button logic
+            // if (toggleCardsButton && homeCardCollection) { ... } // This block is removed
 
             // Card interaction logic (checkbox and swipe-to-dismiss)
             const cards = document.querySelectorAll('#home-card-collection .card');
@@ -727,36 +708,33 @@
 
                 card.addEventListener('touchstart', (event) => {
                     if (card.classList.contains('is-task-done')) {
-                        // Check if the touch is on the card itself, not on interactive elements like the checkbox
                         if (event.target.closest('.task-done-checkbox')) {
-                             touchstartY = 0; // Ignore swipe if touch starts on checkbox
+                             touchstartY = 0; 
                              return;
                         }
                         touchstartY = event.changedTouches[0].screenY;
                     }
-                }, { passive: true }); // Use passive for scroll performance if swipe is not complex
+                }, { passive: true });
 
                 card.addEventListener('touchend', (event) => {
-                    if (card.classList.contains('is-task-done') && touchstartY !== 0) { // Ensure touchstart was valid
+                    if (card.classList.contains('is-task-done') && touchstartY !== 0) { 
                          if (event.target.closest('.task-done-checkbox')) {
-                             return; // Ignore swipe if touch ends on checkbox
+                             return; 
                         }
                         touchendY = event.changedTouches[0].screenY;
                         handleSwipe();
                     }
-                    touchstartY = 0; // Reset for next touch
+                    touchstartY = 0; 
                 }, false);
 
                 function handleSwipe() {
                     const deltaY = touchstartY - touchendY;
                     if (deltaY > swipeThreshold) { // Swiped up
                         card.classList.add('is-disappearing');
-                        // Remove card from DOM after animation to allow layout reflow
                         card.addEventListener('transitionend', function handler(e) {
-                            if (e.propertyName === 'opacity' && card.classList.contains('is-disappearing')) { // Ensure it's the final opacity transition
+                            if (e.propertyName === 'opacity' && card.classList.contains('is-disappearing')) { 
                                 card.style.display = 'none'; 
-                                // Or card.remove(); // if you want to completely remove it
-                                card.removeEventListener('transitionend', handler); // Clean up listener
+                                card.removeEventListener('transitionend', handler); 
                             }
                         });
                     }
@@ -770,6 +748,5 @@
             }
 
         });
-    </script>
-</body>
+    </script></body>
 </html>
