@@ -35,11 +35,11 @@
             align-items: center;
             flex-direction: column;
             height: 100vh;
-            background-color: #1f1f1f; /* Slightly different splash background */
+            background-color: #1f1f1f;
             color: #fff;
             text-align: center;
             animation: splashFadeOut 2.5s ease-in-out forwards;
-            animation-delay: 1s; /* Show splash for 1s before starting fade */
+            animation-delay: 1s;
             position: fixed;
             top: 0;
             left: 0;
@@ -61,7 +61,7 @@
 
         /* App Bar (Top) */
         .app-bar {
-            background-color: #2c2c2c; /* Darker app bar */
+            background-color: #2c2c2c;
             color: #fff;
             padding: 0.75rem 1rem;
             position: fixed;
@@ -80,7 +80,7 @@
         /* Content Area */
         .content-area {
             flex-grow: 1;
-            overflow-y: auto; /* Allow vertical scroll within content */
+            overflow-y: auto;
             padding: 1rem;
             margin-top: 60px; /* Height of app-bar */
             margin-bottom: 60px; /* Height of nav-bar */
@@ -95,31 +95,33 @@
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
-            padding-bottom: 1rem; /* For scrollbar */
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            padding-bottom: 1rem; /* For scrollbar and space for shadow */
+            -webkit-overflow-scrolling: touch;
             transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
             transform: translateX(0);
             opacity: 1;
         }
         .card-collection.is-hidden-left {
-            transform: translateX(-110%); /* Move further to ensure it's off-screen */
+            transform: translateX(-110%);
             opacity: 0;
-            pointer-events: none; /* Prevent interaction when hidden */
+            pointer-events: none;
         }
 
         .card-collection .card {
-            flex: 0 0 auto; /* Prevent cards from shrinking */
-            width: 80vw; /* Card width */
+            flex: 0 0 auto;
+            width: 80vw;
             max-width: 300px;
             margin-right: 1rem;
+            margin-bottom: 1rem; /* Space for shadow and visual separation */
             scroll-snap-align: start;
-            background-color: #333; /* Dark card background */
-            color: #e0e0e0; /* Dark card text */
+            background-color: #333;
+            color: #e0e0e0;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease-out;
+            transition: transform 0.3s ease-out, background-color 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            position: relative; /* For potential absolute positioned elements inside */
         }
-        .card-collection .card:hover {
+        .card-collection .card:hover:not(.is-task-done) { /* Only hover effect if not 'done' */
             transform: translateY(-5px);
         }
         .card-collection .card .card-content {
@@ -128,23 +130,87 @@
         .card-collection .card .title, .card-collection .card .subtitle {
             color: #e0e0e0;
         }
-        .card-collection .card .button {
-            transition: background-color 0.3s, transform 0.3s;
+        
+        /* Task Done Styles */
+        .card.is-task-done {
+            background-color: #2a523d; /* Darker green, indicating completion */
+            opacity: 0.85;
+            /* Add a border or other visual cue */
+            border-left: 5px solid #48c774; /* Bulma success color */
         }
-        .card-collection .card .button:hover {
-            transform: scale(1.05);
+        html.is-light-mode .card.is-task-done {
+            background-color: #e6ffed; /* Light green for light mode */
+            opacity: 0.9;
+            border-left: 5px solid #23d160; /* Bulma success color for light mode */
+        }
+        .card.is-task-done .title,
+        .card.is-task-done .subtitle,
+        .card.is-task-done p {
+            /* text-decoration: line-through; */ /* Optional: strikethrough content */
+            color: #c0c0c0; /* Muted text color */
+        }
+        html.is-light-mode .card.is-task-done .title,
+        html.is-light-mode .card.is-task-done .subtitle,
+        html.is-light-mode .card.is-task-done p {
+            color: #555;
+        }
+        .card.is-task-done .task-done-checkbox-label,
+        .card.is-task-done .task-done-checkbox-label .icon {
+            color: #fff !important; /* Ensure checkbox text is visible */
+        }
+        html.is-light-mode .card.is-task-done .task-done-checkbox-label,
+        html.is-light-mode .card.is-task-done .task-done-checkbox-label .icon {
+            color: #111 !important;
         }
 
-        /* Swipe to hide button */
-        .toggle-cards-button { /* Renamed for clarity */
-            margin-bottom: 0.5rem; /* Space between button and cards */
+
+        .task-done-checkbox-container {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #444;
+        }
+        html.is-light-mode .task-done-checkbox-container {
+             border-top: 1px solid #ddd;
+        }
+        .task-done-checkbox-label {
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+        }
+        .task-done-checkbox-label .icon {
+            margin-right: 0.5em;
+        }
+        html.is-light-mode .task-done-checkbox-label {
+            color: #363636;
+        }
+
+
+        /* Card Disappearing Animation */
+        .card.is-disappearing {
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out, height 0.4s ease-in-out 0.1s, 
+                        padding-top 0.4s ease-in-out 0.1s, padding-bottom 0.4s ease-in-out 0.1s, 
+                        margin-bottom 0.4s ease-in-out 0.1s, margin-right 0.4s ease-in-out 0.1s;
+            transform: translateY(-80px) scale(0.8) rotateX(30deg);
+            opacity: 0 !important;
+            height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+            margin-right: 0 !important; /* To allow next card to slide in smoothly */
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+
+        /* Toggle Cards Button */
+        .toggle-cards-button {
+            margin-bottom: 0.5rem;
             transition: background-color 0.3s, color 0.3s;
         }
 
-
         /* Nav Bar (Bottom) */
         .nav-bar {
-            background-color: #2c2c2c; /* Darker nav bar */
+            background-color: #2c2c2c;
             position: fixed;
             bottom: 0;
             left: 0;
@@ -160,13 +226,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: #b0b0b0; /* Inactive icon color */
+            color: #b0b0b0;
             text-decoration: none;
             font-size: 0.75rem;
             padding: 0.5rem;
             border-radius: 8px;
             transition: background-color 0.3s, color 0.3s, transform 0.2s;
-            flex-grow: 1; /* Allow items to take up space */
+            flex-grow: 1;
             text-align: center;
         }
         .nav-bar .nav-item .icon {
@@ -174,8 +240,8 @@
             margin-bottom: 0.25rem;
         }
         .nav-bar .nav-item.is-active {
-            color: #48c774; /* Bulma success color for active */
-            transform: translateY(-3px) scale(1.05); /* Slight lift and scale for active */
+            color: #48c774;
+            transform: translateY(-3px) scale(1.05);
         }
         .nav-bar .nav-item:hover {
             background-color: #3a3a3a;
@@ -197,11 +263,8 @@
         html.is-light-mode .theme-toggle-label:hover {
              background-color: rgba(0,0,0,0.05);
         }
-        .theme-toggle-label .icon {
-            margin-right: 0.5rem;
-        }
         .theme-toggle-label input[type="checkbox"] {
-            opacity: 0; /* Hide the actual checkbox */
+            opacity: 0;
             width: 0;
             height: 0;
             position: absolute;
@@ -214,8 +277,8 @@
 
         /* Light Mode Specific Styles */
         html.is-light-mode {
-            background-color: #f5f5f5; /* Light background */
-            color: #363636; /* Light text */
+            background-color: #f5f5f5;
+            color: #363636;
         }
         html.is-light-mode .app-bar,
         html.is-light-mode .nav-bar {
@@ -227,10 +290,10 @@
             color: #363636;
         }
         html.is-light-mode .nav-bar .nav-item {
-            color: #7a7a7a; /* Inactive icon color for light mode */
+            color: #7a7a7a;
         }
         html.is-light-mode .nav-bar .nav-item.is-active {
-            color: #23d160; /* Bulma success color for light active */
+            color: #23d160;
         }
         html.is-light-mode .nav-bar .nav-item:hover {
             background-color: #e0e0e0;
@@ -253,7 +316,7 @@
             background-color: #ffffff;
             color: #363636;
         }
-        html.is-light-mode .button.is-light { /* Adjust Bulma's is-light for light theme */
+        html.is-light-mode .button.is-light {
             background-color: #e6e6e6;
             border-color: transparent;
             color: #363636;
@@ -292,9 +355,8 @@
             to { opacity:1; transform: translateY(0); }
         }
 
-        /* Ensure switch looks good in both themes */
         .switch input[type=checkbox]:checked+.check {
-            background: #48c774; /* Bulma success */
+            background: #48c774;
         }
         html.is-light-mode .switch input[type=checkbox]:checked+.check {
             background: #23d160;
@@ -324,38 +386,61 @@
                 <div class="card-collection" id="home-card-collection">
                     <div class="card">
                         <div class="card-content">
-                            <p class="title is-4">Welcome Card</p>
-                            <p class="subtitle is-6">Swipe left to see more!</p>
-                            <p>This is a sample card. Swipe horizontally to explore other features and tips.</p>
-                            <button class="button is-primary mt-3">Get Started</button>
+                            <p class="title is-4">Daily Goal</p>
+                            <p class="subtitle is-6">Stay hydrated!</p>
+                            <p>Drink 8 glasses of water today. Track your progress here.</p>
+                            <div class="task-done-checkbox-container">
+                                <label class="checkbox task-done-checkbox-label">
+                                    <input type="checkbox" class="task-done-checkbox">
+                                    <span class="icon"><i class="far fa-circle"></i></span> Done for today!
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-content">
-                            <p class="title is-4">Feature Spotlight</p>
-                            <p class="subtitle is-6">Discover what's new</p>
-                            <p>Explore exciting new features and updates designed to enhance your experience.</p>
+                            <p class="title is-4">Quick Workout</p>
+                            <p class="subtitle is-6">15 min exercise</p>
+                            <p>A short burst of activity can boost your energy and mood.</p>
+                             <div class="task-done-checkbox-container">
+                                <label class="checkbox task-done-checkbox-label">
+                                    <input type="checkbox" class="task-done-checkbox">
+                                    <span class="icon"><i class="far fa-circle"></i></span> Completed!
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-content">
-                            <p class="title is-4">Daily Tip</p>
-                            <p class="subtitle is-6">A little wisdom</p>
-                            <p>Small positive changes can lead to big results. Keep going!</p>
+                            <p class="title is-4">Mindfulness Moment</p>
+                            <p class="subtitle is-6">5 min meditation</p>
+                            <p>Take a few minutes to center yourself and breathe deeply.</p>
+                             <div class="task-done-checkbox-container">
+                                <label class="checkbox task-done-checkbox-label">
+                                    <input type="checkbox" class="task-done-checkbox">
+                                    <span class="icon"><i class="far fa-circle"></i></span> Achieved!
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-content">
-                            <p class="title is-4">Community</p>
-                            <p class="subtitle is-6">Connect & Share</p>
-                            <p>Join our community to share your progress and get support from others.</p>
+                            <p class="title is-4">Read a Chapter</p>
+                            <p class="subtitle is-6">Expand your mind</p>
+                            <p>Dedicate some time to reading a book or an interesting article.</p>
+                             <div class="task-done-checkbox-container">
+                                <label class="checkbox task-done-checkbox-label">
+                                    <input type="checkbox" class="task-done-checkbox">
+                                    <span class="icon"><i class="far fa-circle"></i></span> Finished!
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="content mt-4">
                 <h3 class="title is-4">Your Dashboard</h3>
-                <p>Welcome to your personalized dashboard. Here you'll find quick access to your most important information and features.</p>
+                <p>Welcome to your personalized dashboard. Your active tasks are shown above.</p>
                 <div class="box">
                     <p>More content can be placed here, like quick stats or links.</p>
                 </div>
@@ -552,7 +637,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const pages = document.querySelectorAll('.page');
-            const navItems = document.querySelectorAll('.nav-bar .nav-item'); // Selects all nav items from all nav bars
             const splashPage = document.getElementById('splash-page');
             const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
             const themeToggleText = document.getElementById('theme-toggle-text');
@@ -560,33 +644,26 @@
             const lightIcon = document.querySelector('.theme-toggle-icon-container .light-icon');
 
             const toggleCardsButton = document.getElementById('toggle-cards-button');
-            const cardCollection = document.getElementById('home-card-collection');
+            const homeCardCollection = document.getElementById('home-card-collection');
 
             function showPage(pageId) {
                 pages.forEach(page => page.classList.remove('is-active'));
                 const activePage = document.getElementById(pageId);
                 if (activePage) activePage.classList.add('is-active');
 
-                // Update active state for all nav items across all nav bars
                 document.querySelectorAll('.nav-bar .nav-item').forEach(item => {
-                    if (item.dataset.page === pageId) {
-                        item.classList.add('is-active');
-                    } else {
-                        item.classList.remove('is-active');
-                    }
+                    item.classList.toggle('is-active', item.dataset.page === pageId);
                 });
             }
 
             setTimeout(() => {
-                // Splash fade out animation handles visibility
                 showPage('home-page');
-            }, 3500); // Duration of splash screen (animation + delay)
+            }, 3500);
 
-            navItems.forEach(item => {
+            document.querySelectorAll('.nav-bar .nav-item').forEach(item => {
                 item.addEventListener('click', (event) => {
                     event.preventDefault();
-                    const pageId = item.dataset.page;
-                    showPage(pageId);
+                    showPage(item.dataset.page);
                 });
             });
             
@@ -598,19 +675,13 @@
             }
 
             function applyTheme(isLight) {
-                if (isLight) {
-                    document.documentElement.classList.add('is-light-mode');
-                    document.documentElement.classList.remove('is-dark');
-                } else {
-                    document.documentElement.classList.remove('is-light-mode');
-                    document.documentElement.classList.add('is-dark');
-                }
+                document.documentElement.classList.toggle('is-light-mode', isLight);
+                document.documentElement.classList.toggle('is-dark', !isLight);
                 updateThemeToggleDisplay(isLight);
                 localStorage.setItem('theme', isLight ? 'light' : 'dark');
             }
 
             const savedTheme = localStorage.getItem('theme');
-            // Default to dark if no theme saved or if saved theme is 'dark'
             let currentThemeIsLight = savedTheme === 'light';
             applyTheme(currentThemeIsLight);
 
@@ -622,27 +693,80 @@
                 });
             }
 
-            if (toggleCardsButton && cardCollection) {
+            if (toggleCardsButton && homeCardCollection) {
                 let cardsHidden = false;
                 toggleCardsButton.addEventListener('click', () => {
                     cardsHidden = !cardsHidden;
-                    cardCollection.classList.toggle('is-hidden-left', cardsHidden);
-                    if (cardsHidden) {
-                        toggleCardsButton.innerHTML = '<span class="icon"><i class="fas fa-arrow-right"></i></span> <span>Show Cards</span>';
-                    } else {
-                        toggleCardsButton.innerHTML = '<span class="icon"><i class="fas fa-arrow-left"></i></span> <span>Hide Cards</span>';
-                    }
+                    homeCardCollection.classList.toggle('is-hidden-left', cardsHidden);
+                    toggleCardsButton.innerHTML = cardsHidden ? 
+                        '<span class="icon"><i class="fas fa-arrow-right"></i></span> <span>Show Cards</span>' :
+                        '<span class="icon"><i class="fas fa-arrow-left"></i></span> <span>Hide Cards</span>';
                 });
             }
 
-            // Ensure initial state of nav items is correct based on the initially displayed page
-            // (This is mostly for the case where the splash screen is very short or disabled for testing)
+            // Card interaction logic (checkbox and swipe-to-dismiss)
+            const cards = document.querySelectorAll('#home-card-collection .card');
+            cards.forEach(card => {
+                const checkbox = card.querySelector('.task-done-checkbox');
+                const checkboxIcon = card.querySelector('.task-done-checkbox-label .icon i');
+                
+                let touchstartY = 0;
+                let touchendY = 0;
+                const swipeThreshold = 50; // Minimum pixels for a swipe
+
+                if (checkbox) {
+                    checkbox.addEventListener('change', () => {
+                        card.classList.toggle('is-task-done', checkbox.checked);
+                        if (checkbox.checked) {
+                            if(checkboxIcon) checkboxIcon.className = 'fas fa-check-circle has-text-success';
+                        } else {
+                            if(checkboxIcon) checkboxIcon.className = 'far fa-circle';
+                        }
+                    });
+                }
+
+                card.addEventListener('touchstart', (event) => {
+                    if (card.classList.contains('is-task-done')) {
+                        // Check if the touch is on the card itself, not on interactive elements like the checkbox
+                        if (event.target.closest('.task-done-checkbox')) {
+                             touchstartY = 0; // Ignore swipe if touch starts on checkbox
+                             return;
+                        }
+                        touchstartY = event.changedTouches[0].screenY;
+                    }
+                }, { passive: true }); // Use passive for scroll performance if swipe is not complex
+
+                card.addEventListener('touchend', (event) => {
+                    if (card.classList.contains('is-task-done') && touchstartY !== 0) { // Ensure touchstart was valid
+                         if (event.target.closest('.task-done-checkbox')) {
+                             return; // Ignore swipe if touch ends on checkbox
+                        }
+                        touchendY = event.changedTouches[0].screenY;
+                        handleSwipe();
+                    }
+                    touchstartY = 0; // Reset for next touch
+                }, false);
+
+                function handleSwipe() {
+                    const deltaY = touchstartY - touchendY;
+                    if (deltaY > swipeThreshold) { // Swiped up
+                        card.classList.add('is-disappearing');
+                        // Remove card from DOM after animation to allow layout reflow
+                        card.addEventListener('transitionend', function handler(e) {
+                            if (e.propertyName === 'opacity' && card.classList.contains('is-disappearing')) { // Ensure it's the final opacity transition
+                                card.style.display = 'none'; 
+                                // Or card.remove(); // if you want to completely remove it
+                                card.removeEventListener('transitionend', handler); // Clean up listener
+                            }
+                        });
+                    }
+                }
+            });
+
             if (document.querySelector('.page.is-active')) {
                  showPage(document.querySelector('.page.is-active').id);
             } else if (pages.length > 0) {
-                 // If somehow no page is active, default to the first one (after splash)
-                 // This is handled by the splash timeout, but as a fallback:
-                 // showPage(pages[0].id === 'splash-page' && pages.length > 1 ? pages[1].id : pages[0].id);
+                 // Fallback handled by splash timeout
             }
 
         });
