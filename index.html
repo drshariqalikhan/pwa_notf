@@ -292,7 +292,7 @@
     <div id="llm-chat-modal" class="modal"> <div class="modal-background"></div> <div class="modal-card"> <header class="modal-card-head"><p class="modal-card-title">Talk About Stress Triggers</p><button class="delete" aria-label="close"></button></header> <section class="modal-card-body"> <p class="is-size-7 mb-2">Simulated chat.</p><div id="llm-chat-history-peace" class="llm-chat-history"></div><div class="field has-addons"><div class="control is-expanded"><input id="llm-chat-input-peace" class="input" type="text" placeholder="Tell me..."></div><div class="control"><button id="llm-chat-send-peace" class="button is-info">Send</button></div></div> </section> <footer class="modal-card-foot"><button class="button modal-close-button">Done</button></footer> </div> </div>
 
     <script>
-        // --- Service Worker Registration ---
+        // --- Service Worer Registration ---
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(reg => console.log('SW registered.', reg)).catch(err => console.log('SW reg failed: ', err)); }); }
 
         document.addEventListener('DOMContentLoaded', () => {
